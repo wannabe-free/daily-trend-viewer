@@ -1,0 +1,274 @@
+{
+  "checkedDate": "2026-11-18",
+  "checkedAt": 1794931792.8700943,
+  "selectionRule": "팔로워 1만 이상, 고정 릴스를 제외한 최근 6개 표본(공개 통계 최소 4개). 참여율 중앙값 1% 이상 또는 조회수 중앙값/팔로워 30% 이상.",
+  "engagementFormula": "게시물별 (좋아요+댓글)/팔로워×100의 중앙값. 숨김 통계와 저장·공유는 제외. 자료 요청 등 댓글 이벤트와 광고 게시물을 포함하므로 자연 참여나 팔로워 진위를 보증하는 지표가 아님.",
+  "accounts": {
+    "sorea_im": {
+      "name": "죠대리",
+      "categories": [
+        "재테크",
+        "자기계발"
+      ],
+      "profileUrl": "https://www.instagram.com/sorea_im/",
+      "followers": 27796,
+      "sampleSize": 6,
+      "publicStatsSize": 6,
+      "medianEngagementPercent": 1.29,
+      "medianViews": 28329.5,
+      "medianLikes": 156.5,
+      "medianComments": 144.0,
+      "medianViewFollowerPercent": 101.92,
+      "sampleUrls": [
+        "https://www.instagram.com/reel/DfwcA9JSUEV/",
+        "https://www.instagram.com/reel/DfelnRVAIvA/",
+        "https://www.instagram.com/reel/DfZbAy1Stya/",
+        "https://www.instagram.com/reel/DfUPUQ9yp4F/",
+        "https://www.instagram.com/reel/DfMZ2VTy4Zd/",
+        "https://www.instagram.com/reel/De1LfIfR1QV/"
+      ]
+    },
+    "zzan.boo": {
+      "name": "김짠부",
+      "categories": [
+        "재테크"
+      ],
+      "profileUrl": "https://www.instagram.com/zzan.boo/",
+      "followers": 219440,
+      "sampleSize": 6,
+      "publicStatsSize": 6,
+      "medianEngagementPercent": 0.39,
+      "medianViews": 139977.5,
+      "medianLikes": 840.0,
+      "medianComments": 12.0,
+      "medianViewFollowerPercent": 63.79,
+      "sampleUrls": [
+        "https://www.instagram.com/reel/DfmNGu4ultk/",
+        "https://www.instagram.com/reel/DfkMcpsuExq/",
+        "https://www.instagram.com/reel/Dfb6pGuOwOi/",
+        "https://www.instagram.com/reel/DejQjdyu92x/",
+        "https://www.instagram.com/reel/DedSENQutEA/",
+        "https://www.instagram.com/reel/DebET7XOURg/"
+      ]
+    },
+    "grappt_": {
+      "name": "정원ㅣPPT 디자인 · AI",
+      "categories": [
+        "GPT 활용",
+        "AI",
+        "콘텐츠 제작"
+      ],
+      "profileUrl": "https://www.instagram.com/grappt_/",
+      "followers": 124551,
+      "sampleSize": 6,
+      "publicStatsSize": 6,
+      "medianEngagementPercent": 13.98,
+      "medianViews": 585180.0,
+      "medianLikes": 5873.5,
+      "medianComments": 12977.0,
+      "medianViewFollowerPercent": 469.83,
+      "sampleUrls": [
+        "https://www.instagram.com/reel/Dfpe_T9oLx5/",
+        "https://www.instagram.com/reel/DfHUyPUI5eT/",
+        "https://www.instagram.com/reel/De9B-61IVhj/",
+        "https://www.instagram.com/reel/DejI9iWoCLO/",
+        "https://www.instagram.com/reel/DeMVqK3oHiI/",
+        "https://www.instagram.com/reel/Dd9GKV2hJCQ/"
+      ]
+    },
+    "haniee_im": {
+      "name": "하니 HANI",
+      "categories": [
+        "GPT 활용",
+        "AI"
+      ],
+      "profileUrl": "https://www.instagram.com/haniee_im/",
+      "followers": 37546,
+      "sampleSize": 6,
+      "publicStatsSize": 6,
+      "medianEngagementPercent": 1.93,
+      "medianViews": 44146.0,
+      "medianLikes": 351.0,
+      "medianComments": 392.0,
+      "medianViewFollowerPercent": 117.58,
+      "sampleUrls": [
+        "https://www.instagram.com/reel/Df1x4vURZZZ/",
+        "https://www.instagram.com/reel/DfzNCa6DDK0/",
+        "https://www.instagram.com/reel/DfuDHz1GaaM/",
+        "https://www.instagram.com/reel/Dfo6NctEdcI/",
+        "https://www.instagram.com/reel/DfmVKWEj8FQ/",
+        "https://www.instagram.com/reel/DfhLsySEok0/"
+      ]
+    },
+    "gojaehyun.go": {
+      "name": "GO | AI 실험실",
+      "categories": [
+        "GPT 활용",
+        "AI"
+      ],
+      "profileUrl": "https://www.instagram.com/gojaehyun.go/",
+      "followers": 41562,
+      "sampleSize": 6,
+      "publicStatsSize": 6,
+      "medianEngagementPercent": 1.0,
+      "medianViews": 46639.5,
+      "medianLikes": 399.5,
+      "medianComments": 15.5,
+      "medianViewFollowerPercent": 112.22,
+      "sampleUrls": [
+        "https://www.instagram.com/reel/Df1rFqrvyV0/",
+        "https://www.instagram.com/reel/DfkGqm3PaWt/",
+        "https://www.instagram.com/reel/DfZFwZxPWWZ/",
+        "https://www.instagram.com/reel/DfWkju4vOcJ/",
+        "https://www.instagram.com/reel/DfR-MA9vrYd/",
+        "https://www.instagram.com/reel/DfHVETWvnEE/"
+      ]
+    },
+    "studio_hongcha": {
+      "name": "스튜디오 홍차 | 스톡작가 꿀팁 • 디지털 드로잉",
+      "categories": [
+        "미리캔버스",
+        "부업",
+        "콘텐츠 제작"
+      ],
+      "profileUrl": "https://www.instagram.com/studio_hongcha/",
+      "followers": 56264,
+      "sampleSize": 6,
+      "publicStatsSize": 6,
+      "medianEngagementPercent": 3.39,
+      "medianViews": 46232.5,
+      "medianLikes": 282.0,
+      "medianComments": 1638.0,
+      "medianViewFollowerPercent": 82.17,
+      "sampleUrls": [
+        "https://www.instagram.com/reel/DeYxEjHS_9R/",
+        "https://www.instagram.com/reel/DeIQFKgyvRQ/",
+        "https://www.instagram.com/reel/Ddl3La0yboH/",
+        "https://www.instagram.com/reel/DdJedfgy6ZA/",
+        "https://www.instagram.com/reel/DdLuf_fyQU5/",
+        "https://www.instagram.com/reel/DdDwap1y7VF/"
+      ]
+    },
+    "luck.iwi": {
+      "name": "럭키위",
+      "categories": [
+        "미리캔버스",
+        "부업",
+        "콘텐츠 제작"
+      ],
+      "profileUrl": "https://www.instagram.com/luck.iwi/",
+      "followers": 41992,
+      "sampleSize": 6,
+      "publicStatsSize": 6,
+      "medianEngagementPercent": 1.15,
+      "medianViews": 56290.5,
+      "medianLikes": 415.5,
+      "medianComments": 62.0,
+      "medianViewFollowerPercent": 134.05,
+      "sampleUrls": [
+        "https://www.instagram.com/reel/Dfdz1UJhYMX/",
+        "https://www.instagram.com/reel/DfKGe5iOPUJ/",
+        "https://www.instagram.com/reel/De88jO6hTZB/",
+        "https://www.instagram.com/reel/DeOx9_6h45D/",
+        "https://www.instagram.com/reel/DdvtmagTAwo/",
+        "https://www.instagram.com/reel/DdbYpM2xoZQ/"
+      ]
+    },
+    "mel.d_illust": {
+      "name": "멜디 | 엣시 그림 수익화 • 드로잉 강의",
+      "categories": [
+        "미리캔버스",
+        "부업",
+        "콘텐츠 제작"
+      ],
+      "profileUrl": "https://www.instagram.com/mel.d_illust/",
+      "followers": 24205,
+      "sampleSize": 6,
+      "publicStatsSize": 6,
+      "medianEngagementPercent": 1.42,
+      "medianViews": 12246.5,
+      "medianLikes": 328.5,
+      "medianComments": 15.0,
+      "medianViewFollowerPercent": 50.59,
+      "sampleUrls": [
+        "https://www.instagram.com/reel/De_9CmrSUQi/",
+        "https://www.instagram.com/reel/De09bSqSs6k/",
+        "https://www.instagram.com/reel/DetyWRfysV2/",
+        "https://www.instagram.com/reel/DeOTlFSyXa_/",
+        "https://www.instagram.com/reel/Dd5pztHyi1E/",
+        "https://www.instagram.com/reel/Ddgj5Bhylu4/"
+      ]
+    },
+    "kidari.192": {
+      "name": "키다리아저씨🚶🏻‍♂️",
+      "categories": [
+        "맛집"
+      ],
+      "profileUrl": "https://www.instagram.com/kidari.192/",
+      "followers": 678291,
+      "sampleSize": 6,
+      "publicStatsSize": 6,
+      "medianEngagementPercent": 1.26,
+      "medianViews": 272344.5,
+      "medianLikes": 8447.5,
+      "medianComments": 113.5,
+      "medianViewFollowerPercent": 40.15,
+      "sampleUrls": [
+        "https://www.instagram.com/reel/De1O4eJo08E/",
+        "https://www.instagram.com/reel/Ddi4tNnITBU/",
+        "https://www.instagram.com/reel/DdGwHZcov73/",
+        "https://www.instagram.com/reel/Dc8SJKCIY0b/",
+        "https://www.instagram.com/reel/DcyAhpQIj2o/",
+        "https://www.instagram.com/reel/DclHSpfIUzW/"
+      ]
+    },
+    "parkyeny": {
+      "name": "ღ  예니  ღ | 데이트 , 맛집 , 팝업 , 여행",
+      "categories": [
+        "맛집",
+        "여행"
+      ],
+      "profileUrl": "https://www.instagram.com/parkyeny/",
+      "followers": 102820,
+      "sampleSize": 6,
+      "publicStatsSize": 5,
+      "medianEngagementPercent": 1.14,
+      "medianViews": 121986,
+      "medianLikes": 1130,
+      "medianComments": 44,
+      "medianViewFollowerPercent": 118.64,
+      "sampleUrls": [
+        "https://www.instagram.com/reel/DfWOlo-qX-D/",
+        "https://www.instagram.com/reel/DfchdyiKpSo/",
+        "https://www.instagram.com/reel/DftNXD0KAwa/",
+        "https://www.instagram.com/reel/DftEwOuqQx2/",
+        "https://www.instagram.com/reel/Dfrvt4cqTic/",
+        "https://www.instagram.com/reel/DfrC7JwKBYb/"
+      ]
+    },
+    "h.tw92": {
+      "name": "하태원 | Ha Taewon",
+      "categories": [
+        "여행",
+        "맛집"
+      ],
+      "profileUrl": "https://www.instagram.com/h.tw92/",
+      "followers": 134968,
+      "sampleSize": 6,
+      "publicStatsSize": 6,
+      "medianEngagementPercent": 2.16,
+      "medianViews": 113094.5,
+      "medianLikes": 2800.0,
+      "medianComments": 113.0,
+      "medianViewFollowerPercent": 83.79,
+      "sampleUrls": [
+        "https://www.instagram.com/reel/Df2Q8kcSTHH/",
+        "https://www.instagram.com/reel/Dfwd4i8yQ4b/",
+        "https://www.instagram.com/reel/Dfrgq3XyTP1/",
+        "https://www.instagram.com/reel/Dfqe-xTS5fv/",
+        "https://www.instagram.com/reel/DfpHuhFSq7o/",
+        "https://www.instagram.com/reel/Dfl1_eOy4B7/"
+      ]
+    }
+  }
+}

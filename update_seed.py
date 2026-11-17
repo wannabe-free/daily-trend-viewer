@@ -17,9 +17,9 @@ IMG = os.path.join(SEED, "img")
 
 def main():
     reels, accounts, fetched = server.get_reels(True)
-    reels = reels[:80]
-    if not reels:
-        print("릴스 수집 실패(0개) — 시드를 덮어쓰지 않고 종료합니다.")
+    missing = [a for a in accounts if not any(r.get("account") == a for r in reels)]
+    if missing:
+        print("릴스 수집 실패 — 기존 시드를 유지합니다: " + ", ".join(missing))
         return 1
     os.makedirs(IMG, exist_ok=True)
     for f in os.listdir(IMG):

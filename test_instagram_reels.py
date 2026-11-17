@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 import instagram_reels as ig
 import collect
+import server
 
 
 def page(*records):
@@ -14,6 +15,14 @@ def page(*records):
 
 
 class InstagramReelsTests(unittest.TestCase):
+    def test_ai_search_keeps_practical_references_and_rejects_observed_noise(self):
+        for title in ("컴퓨터가 꺼져도 24시간 굴려지는 개인비서 챗GPT에서 만든 Dots 사용기!",
+                      "2026년 최고의 AI 영상 제작 툴", "무료 AI 툴 추천 사용법"):
+            self.assertTrue(server.is_ai_reference({"title": title}), title)
+        for title in ("하루 종일 듣는 트로트", "Anthropic, IPO 앞두고 AI 오피스 툴 출시... OpenAI에 도전장",
+                      "AI 부정행위 논란", "최신 IT 뉴스 모음"):
+            self.assertFalse(server.is_ai_reference({"title": title}), title)
+
     def test_profile_rejects_other_accounts_photos_and_duplicates(self):
         node = {"code": "Real_123", "product_type": "clips", "play_count": 42,
                 "like_count": 7, "comment_count": 2, "display_uri": "https://s.cdninstagram.com/thumb.jpg"}

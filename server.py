@@ -37,8 +37,8 @@ IMG_CACHE_MAX = 600
 # ---------------------------------------------------------------- 유튜브
 # 유튜브/쇼츠 카테고리별 검색 키워드
 CATEGORIES = {
-    "AI 활용": ["챗GPT 업무 활용법", "AI 업무 자동화 방법", "AI 콘텐츠 제작 실습", "AI 문서 작성 활용법"],
-    "AI 툴": ["AI 툴 추천 사용법", "무료 AI 툴 사용법", "AI 도구 활용법", "AI 영상 제작 툴 사용법"],
+    "AI 활용": ["AI 활용법", "챗GPT 활용법", "AI 업무 자동화", "AI 영상 만들기", "AI 프롬프트"],
+    "AI 툴": ["AI 툴", "무료 AI 툴", "AI 툴 추천", "AI 도구 추천", "챗GPT 사용법"],
     "자기계발": ["자기계발", "습관 만들기", "시간 관리", "독서"],
     "콘텐츠 제작": ["콘텐츠 제작", "영상 편집", "쇼츠 만들기", "릴스 제작"],
     "재테크": ["재테크", "ETF 투자", "절약", "자산 관리"],
@@ -47,15 +47,25 @@ CATEGORIES = {
 }
 # "전체" 탭은 아래 카테고리들을 합쳐 조회수순으로 재정렬
 ALL_MERGE = list(CATEGORIES)
-# 릴스는 기존 분야와 키워드를 유지합니다.
+# 릴스는 영상 검색과 별도로 레퍼런스 분야를 제공합니다.
 REELS_CATEGORIES = {"AI": ["AI 활용법", "챗GPT", "생성형 AI", "AI 자동화"],
+                    "GPT 활용": ["GPT", "챗GPT", "챗지피티", "프롬프트"],
+                    "미리캔버스": ["미리캔버스", "기여자", "스톡작가", "디지털 드로잉"],
+                    "맛집": ["맛집", "먹방", "맛집추천", "카페"],
+                    "여행": ["여행", "숙소", "관광", "여행코스"],
                     **{name: keywords for name, keywords in CATEGORIES.items()
                        if name not in ("AI 활용", "AI 툴")}}
 
 
 def category_config():
+    try:
+        with open(os.path.join(BASE_DIR, "reels_account_info.json"), encoding="utf-8") as f:
+            reference = json.load(f)
+    except (OSError, ValueError):
+        reference = {}
     return {"categories": ["전체"] + list(CATEGORIES), "keywords": CATEGORIES,
-            "reelsCategories": ["전체"] + list(REELS_CATEGORIES), "reelsKeywords": REELS_CATEGORIES}
+            "reelsCategories": ["전체"] + list(REELS_CATEGORIES), "reelsKeywords": REELS_CATEGORIES,
+            "reelsReference": reference}
 
 # 검색 필터 protobuf: 업로드 날짜 (2=오늘, 3=이번 주, 4=이번 달)
 PERIOD_CODE = {"day": 2, "week": 3, "month": 4}
@@ -75,6 +85,8 @@ DEFAULT_IG_ACCOUNTS = [
     "rabbit._.habbit", "siho_toon_", "skluzy_zetech", "jjan_bubu", "hibi_heebee",
     "kim.chiik", "gguldon_", "daily.fishbowl", "bbaekong_toon", "donizoa_",
     "countryside.mouse", "go.ownos", "bbyonggeul",
+    "sorea_im", "zzan.boo", "grappt_", "haniee_im", "gojaehyun.go",
+    "studio_hongcha", "luck.iwi", "mel.d_illust", "kidari.192", "parkyeny", "h.tw92",
 ]
 
 # ---------------------------------------------------------------- X (트위터)
@@ -248,12 +260,27 @@ def enrich_likes(videos, limit=45):
     return videos
 
 
-def merge_yt_searches(queries, period, shorts):
+def is_ai_reference(video):
+    title = video.get("title", "").lower()
+    if re.search(r"ipo|주가|상장|속보|부정행위|도전장", title):
+        return False
+    context = re.search(r"(?<![a-z])ai(?![a-z])|인공지능|gpt|챗지피티|클로드|claude|제미나이|gemini|"
+                        r"커서|cursor|힉스필드|higgsfield|미드저니|midjourney|노트북lm|notebooklm|"
+                        r"퍼플렉시티|perplexity|코파일럿|copilot|바이브.?코딩|vrew|브루", title)
+    intent = ("툴", "도구", "활용", "사용", "추천", "비교", "리뷰", "써봤", "써본", "만들", "제작",
+              "자동화", "프롬프트", "기능", "강좌", "강의", "가이드", "실습", "방법", "생산성",
+              "에이전트", "스킬", "mcp", "tool", "tutorial", "how to", "guide", "review", "workflow")
+    return bool(context) and any(word in title for word in intent)
+
+
+def merge_yt_searches(queries, period, shorts, practical_queries=()):
     with ThreadPoolExecutor(max_workers=6) as pool:
         results = pool.map(lambda q: yt_search(q, period, shorts), queries)
     merged, seen = [], set()
-    for chunk in results:
+    for query, chunk in zip(queries, results):
         for v in chunk:
+            if query in practical_queries and not is_ai_reference(v):
+                continue
             if v["id"] not in seen:
                 seen.add(v["id"])
                 merged.append(v)
@@ -269,7 +296,8 @@ def get_videos(category: str, period: str, shorts: bool, force: bool, enrich: bo
             queries = [q for c in ALL_MERGE for q in CATEGORIES[c]]
         else:
             queries = CATEGORIES.get(category, [category])
-        vids = merge_yt_searches(queries, period, shorts)
+        practical = set() if query else set(CATEGORIES["AI 활용"] + CATEGORIES["AI 툴"])
+        vids = merge_yt_searches(queries, period, shorts, practical)
         if enrich:
             enrich_likes(vids)
         return vids
