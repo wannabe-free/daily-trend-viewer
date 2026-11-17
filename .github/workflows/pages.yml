@@ -23,10 +23,17 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - name: 공개 페이지 브라우저 수집 준비
+        run: |
+          python3 -m pip install 'playwright>=1.55,<2'
+          python3 -m playwright install --with-deps chromium
+      - name: 릴스 파서 검증
+        run: python3 -m unittest -v test_instagram_reels.py
       - name: 데이터 수집 및 정적 사이트 생성
         env:
           PAGES_BASE: https://wannabe-free.github.io/daily-trend-viewer/
-        run: python3 collect.py _site
+          IG_BROWSER_FALLBACK: "1"
+        run: python3 -u collect.py _site
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
