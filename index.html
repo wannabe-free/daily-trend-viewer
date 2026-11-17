@@ -187,7 +187,7 @@
       <h2>📰 AI 영상 뉴스 <small>구글 뉴스 · 최신순</small></h2>
       <div class="newslist" id="aiNews"></div>
     </div>
-    <p class="note">💡 인기 AI 영상은 <b>유튜브 탭 → 'AI' 카테고리</b>에서 조회수·좋아요순으로 볼 수 있어요.</p>
+    <p class="note">💡 실사용 방법과 도구 소개 영상은 <b>유튜브·쇼츠 → AI 활용 / AI 툴</b>에서 볼 수 있어요.</p>
     <div class="status" id="aiStatus" style="display:none"></div>
   </div>
 
@@ -284,7 +284,7 @@
 </div>
 
 <script>
-const state = { tab: 'youtube', category: '전체', period: 'week', categories: ['전체'], keywords: {}, search: '' };
+const state = { tab: 'youtube', category: '전체', period: 'week', categories: ['전체'], keywords: {}, reelsCategories: ['전체'], reelsKeywords: {}, search: '' };
 
 const fmt = n => {
   if (n >= 1e8) return (n / 1e8).toFixed(1).replace(/\.0$/, '') + '억회';
@@ -301,16 +301,21 @@ async function initCategories() {
   const data = await res.json();
   state.categories = data.categories;
   state.keywords = data.keywords || {};
+  state.reelsCategories = data.reelsCategories || data.categories;
+  state.reelsKeywords = data.reelsKeywords || data.keywords || {};
   renderChips();
 }
 function renderChips() {
+  const categories = state.tab === 'reels' ? state.reelsCategories : state.categories;
+  const activeKeywords = state.tab === 'reels' ? state.reelsKeywords : state.keywords;
+  if (!categories.includes(state.category)) state.category = '전체';
   const box = document.getElementById('chips');
   box.innerHTML = '';
-  state.categories.forEach(c => {
+  categories.forEach(c => {
     const b = document.createElement('button');
     b.className = 'chip' + (c === state.category && (state.tab === 'reels' || !state.search) ? ' active' : '');
     b.textContent = c;
-    b.title = (state.keywords[c] || []).join(' · ');
+    b.title = (activeKeywords[c] || []).join(' · ');
     b.onclick = () => {
       state.category = c; state.search = '';
       document.getElementById('searchInput').value = '';
@@ -324,8 +329,8 @@ function renderChips() {
   const isCategoryTab = ['youtube', 'shorts', 'reels'].includes(state.tab);
   keywords.style.display = isCategoryTab ? 'block' : 'none';
   keywords.textContent = state.search && state.tab !== 'reels' ? '검색어: ' + state.search
-    : state.category === '전체' ? '관심 분야: ' + state.categories.slice(1).join(' · ')
-    : (state.tab === 'reels' ? '릴스 필터 키워드: ' : '검색 키워드: ') + (state.keywords[state.category] || []).join(' · ');
+    : state.category === '전체' ? '관심 분야: ' + categories.slice(1).join(' · ')
+    : (state.tab === 'reels' ? '릴스 필터 키워드: ' : '검색 키워드: ') + (activeKeywords[state.category] || []).join(' · ');
 }
 
 /* ---------- 유튜브/쇼츠 영상 ---------- */
@@ -548,7 +553,7 @@ function renderReels() {
   const f = reelsState.sort;
   const label = { views: '조회수', likes: '좋아요', comments: '댓글' };
   const normalize = text => String(text || '').normalize('NFKC').toLowerCase().replace(/[\s#_-]+/g, '');
-  const keywords = [state.category, ...(state.keywords[state.category] || [])].map(normalize);
+  const keywords = [state.category, ...(state.reelsKeywords[state.category] || [])].map(normalize);
   const filtered = state.category === '전체' ? reelsData : reelsData.filter(r => {
     const text = normalize([r.caption, r.title, r.account, r.profileDescription].join(' '));
     return keywords.some(keyword => keyword && text.includes(keyword));

@@ -28,7 +28,7 @@ PAGES_BASE = os.environ.get("PAGES_BASE", "https://wannabe-free.github.io/daily-
 
 # static_shim.js의 SLUG와 반드시 일치해야 합니다 (파일명에 쓸 영문 슬러그)
 CATEGORY_SLUGS = {
-    "전체": "all", "AI": "ai", "자기계발": "self-development",
+    "전체": "all", "AI 활용": "ai-practical", "AI 툴": "ai-tools", "자기계발": "self-development",
     "콘텐츠 제작": "content", "재테크": "finance", "부업": "side-hustle", "경매": "auction",
 }
 
@@ -207,8 +207,7 @@ def main():
     os.makedirs(os.path.join(OUT, "data"), exist_ok=True)
     os.makedirs(os.path.join(OUT, "img"), exist_ok=True)
 
-    write_json("categories.json", {"categories": ["전체"] + list(server.CATEGORIES),
-                                   "keywords": server.CATEGORIES})
+    write_json("categories.json", server.category_config())
     collect_videos()
 
     reels, accounts, fetched = server.get_reels(False)

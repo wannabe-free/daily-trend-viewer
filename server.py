@@ -35,9 +35,10 @@ _img_lock = threading.Lock()
 IMG_CACHE_MAX = 600
 
 # ---------------------------------------------------------------- 유튜브
-# 카테고리별 검색 키워드 (유튜브/쇼츠 검색 및 릴스 설명 필터에서 공통 사용)
+# 유튜브/쇼츠 카테고리별 검색 키워드
 CATEGORIES = {
-    "AI": ["AI 활용법", "챗GPT", "생성형 AI", "AI 자동화"],
+    "AI 활용": ["챗GPT 업무 활용법", "AI 업무 자동화 방법", "AI 콘텐츠 제작 실습", "AI 문서 작성 활용법"],
+    "AI 툴": ["AI 툴 추천 사용법", "무료 AI 툴 사용법", "AI 도구 활용법", "AI 영상 제작 툴 사용법"],
     "자기계발": ["자기계발", "습관 만들기", "시간 관리", "독서"],
     "콘텐츠 제작": ["콘텐츠 제작", "영상 편집", "쇼츠 만들기", "릴스 제작"],
     "재테크": ["재테크", "ETF 투자", "절약", "자산 관리"],
@@ -46,6 +47,15 @@ CATEGORIES = {
 }
 # "전체" 탭은 아래 카테고리들을 합쳐 조회수순으로 재정렬
 ALL_MERGE = list(CATEGORIES)
+# 릴스는 기존 분야와 키워드를 유지합니다.
+REELS_CATEGORIES = {"AI": ["AI 활용법", "챗GPT", "생성형 AI", "AI 자동화"],
+                    **{name: keywords for name, keywords in CATEGORIES.items()
+                       if name not in ("AI 활용", "AI 툴")}}
+
+
+def category_config():
+    return {"categories": ["전체"] + list(CATEGORIES), "keywords": CATEGORIES,
+            "reelsCategories": ["전체"] + list(REELS_CATEGORIES), "reelsKeywords": REELS_CATEGORIES}
 
 # 검색 필터 protobuf: 업로드 날짜 (2=오늘, 3=이번 주, 4=이번 달)
 PERIOD_CODE = {"day": 2, "week": 3, "month": 4}
@@ -92,7 +102,6 @@ TIKWM_BASE = "https://www.tikwm.com/api"
 TIKTOK_REGION = "KR"
 
 # ---------------------------------------------------------------- AI 영상 탭
-AI_YT_QUERIES = CATEGORIES["AI"]
 NEWS_FEEDS = [
     ("국내", "https://news.google.com/rss/search?q=" +
      quote('AI 영상 생성 OR "AI 비디오" OR 영상생성모델') + "&hl=ko&gl=KR&ceid=KR:ko"),
@@ -693,7 +702,7 @@ def fetch_hf_models():
 
 
 def get_ai_data(force: bool):
-    # AI 탭은 '글'(모델·뉴스)만 제공합니다. AI 영상은 유튜브 탭의 'AI' 카테고리로 통합됨.
+    # AI 탭은 모델·뉴스를, 유튜브/쇼츠의 AI 활용·AI 툴 카테고리는 실사용 영상을 제공합니다.
     def fetch():
         with ThreadPoolExecutor(max_workers=2) as pool:
             news_f = pool.submit(fetch_news)
@@ -762,7 +771,7 @@ class Handler(BaseHTTPRequestHandler):
             shorts = qs.get("shorts", ["0"])[0] == "1"
             enrich = qs.get("enrich", ["0"])[0] == "1"
             query = qs.get("q", [""])[0].strip()
-            if not query and category not in ("전체", "AI") and category not in CATEGORIES:
+            if not query and category != "전체" and category not in CATEGORIES:
                 self._send(400, {"error": "unknown category"})
                 return
             videos, fetched_at = get_videos(category, period, shorts, force, enrich, query)
@@ -770,7 +779,7 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if parsed.path == "/api/categories":
-            self._send(200, {"categories": ["전체"] + list(CATEGORIES), "keywords": CATEGORIES})
+            self._send(200, category_config())
             return
 
         if parsed.path == "/api/reels":
