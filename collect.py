@@ -155,6 +155,10 @@ def main():
     collect_videos()
 
     reels, accounts, fetched = server.get_reels(False)
+    missing_live = [a for a in accounts if not any(r["account"] == a for r in reels)]
+    if missing_live and os.environ.get("IG_BROWSER_FALLBACK") == "1":
+        import instagram_browser
+        reels.extend(instagram_browser.fetch_accounts(missing_live))
     data = carry_forward("reels.json", "reels",
                          {"reels": reels, "accounts": accounts, "fetchedAt": fetched, "source": "live"})
     n = download_images(data["reels"], "thumbnail")
