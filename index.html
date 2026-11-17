@@ -192,7 +192,7 @@
   </div>
 
   <div id="reelsView" class="ext-section" style="display:none">
-    <p class="note">등록한 계정들의 릴스를 모아 위 카테고리의 키워드로 설명·계정명을 필터링합니다. 인스타그램 전체 검색은 지원하지 않으므로 관심 분야의 크리에이터 계정을 추가해 주세요. 좋아요·댓글로 정렬할 수 있으며 조회수는 제공되지 않습니다.</p>
+    <p class="note">등록 계정의 공개 릴스를 직접 수집합니다. 영상을 누르면 여기서 재생하며, 카테고리를 선택하면 설명·프로필 키워드로 필터링합니다. 비공개 통계는 표시하지 않습니다.</p>
     <h2 style="font-size:16px;margin-bottom:10px">👤 구독 계정</h2>
     <div class="acc-chips" id="accChips"></div>
     <div class="addbar">
@@ -201,6 +201,7 @@
     </div>
     <h2 style="font-size:16px;margin:22px 0 12px">📸 인기 릴스</h2>
     <p class="note" id="reelsSource" style="display:none"></p>
+    <p class="note" id="reelsMissing" style="display:none"></p>
     <div class="sortbar">
       <div class="sortmenu" id="reelsSortMenu">
         <button class="sorttoggle">정렬: <span class="curlabel">좋아요순</span> <span class="caret">▼</span></button>
@@ -274,6 +275,7 @@
 <div id="modal">
   <div class="modal-box" id="modalBox">
     <iframe class="player" id="player" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+    <video class="player" id="reelPlayer" controls playsinline preload="metadata" style="display:none;max-height:calc(100dvh - 150px);object-fit:contain"></video>
     <div class="modal-actions">
       <a id="openExternal" target="_blank" rel="noopener">유튜브에서 열기 ↗</a>
       <button id="closeModal">닫기</button>
@@ -397,12 +399,21 @@ function videoCard(v, rank) {
 
 /* ---------- 재생 모달 ---------- */
 function openPlayer(id, vertical) {
+  closePlayer();
   document.getElementById('modalBox').className = 'modal-box' + (vertical ? ' vertical' : '');
+  document.getElementById('player').style.display = 'block';
   document.getElementById('player').src = `https://www.youtube.com/embed/${id}?autoplay=1`;
   document.getElementById('openExternal').href = `https://www.youtube.com/watch?v=${id}`;
+  document.getElementById('openExternal').textContent = '유튜브에서 열기 ↗';
   document.getElementById('modal').classList.add('open');
 }
 function closePlayer() {
+  const video = document.getElementById('reelPlayer');
+  video.onerror = null;
+  video.pause();
+  video.removeAttribute('src');
+  video.load();
+  video.style.display = 'none';
   document.getElementById('player').src = '';
   document.getElementById('modal').classList.remove('open');
 }
@@ -472,7 +483,29 @@ function timeAgo(ts) {
 /* ---------- 인스타 릴스 탭 ---------- */
 let reelsData = [];
 let reelsLoadSeq = 0;
-const reelsState = { sort: 'likes' };  // likes | comments | views (미러 소스라 조회수는 없음)
+const reelsState = { sort: 'likes' };
+function reelThumbnail(r) {
+  return /^(?:img\/|\/seed\/img\/)[a-f0-9]{16}\.(jpg|png|webp)$/.test(r.thumbnail)
+    ? r.thumbnail : '/api/img?u=' + encodeURIComponent(r.thumbnail || '');
+}
+function openReel(r) {
+  closePlayer();
+  const frame = document.getElementById('player');
+  const video = document.getElementById('reelPlayer');
+  const fallback = () => {
+    video.pause(); video.style.display = 'none'; frame.style.display = 'block';
+    frame.src = 'https://www.instagram.com/reel/' + encodeURIComponent(r.id) + '/embed/';
+  };
+  document.getElementById('modalBox').className = 'modal-box vertical';
+  document.getElementById('openExternal').href = r.url;
+  document.getElementById('openExternal').textContent = '인스타그램에서 열기 ↗';
+  if (r.videoUrl) {
+    frame.style.display = 'none'; video.style.display = 'block';
+    video.poster = reelThumbnail(r); video.onerror = fallback; video.src = r.videoUrl;
+    video.play().catch(() => {}); // 브라우저가 자동 재생을 막으면 재생 버튼 사용
+  } else fallback();
+  document.getElementById('modal').classList.add('open');
+}
 async function loadReels(force = false) {
   const seq = ++reelsLoadSeq;
   const status = document.getElementById('reelsStatus');
@@ -484,10 +517,14 @@ async function loadReels(force = false) {
     const data = await (await fetch('/api/reels' + (force ? '?force=1' : ''))).json();
     if (seq !== reelsLoadSeq) return;
     renderAccountChips(data.accounts);
+    const missing = document.getElementById('reelsMissing');
+    missing.style.display = (data.missingAccounts || []).length ? 'block' : 'none';
+    missing.textContent = '이번 수집에서 확인되지 않은 계정: ' + (data.missingAccounts || []).join(', ');
     const source = document.getElementById('reelsSource');
-    source.style.display = data.source === 'snapshot' ? 'block' : 'none';
-    source.textContent = data.source === 'snapshot'
-      ? '실시간 릴스 수집이 제한되어 저장된 데이터를 표시합니다. 수집일: ' + new Date(data.fetchedAt * 1000).toLocaleString('ko-KR') : '';
+    source.style.display = data.source === 'snapshot' || (data.cachedAccounts || []).length ? 'block' : 'none';
+    source.textContent = (data.cachedAccounts || []).length
+      ? '일시적으로 수집되지 않은 계정은 이전 수집분을 유지합니다: ' + data.cachedAccounts.join(', ')
+      : data.source === 'snapshot' ? '저장된 릴스입니다. 수집일: ' + new Date(data.fetchedAt * 1000).toLocaleString('ko-KR') : '';
     document.getElementById('updated').textContent =
       '업데이트: ' + new Date(data.fetchedAt * 1000).toLocaleTimeString('ko-KR');
     reelsData = data.reels || [];
@@ -510,7 +547,7 @@ function renderReels() {
   const normalize = text => String(text || '').normalize('NFKC').toLowerCase().replace(/[\s#_-]+/g, '');
   const keywords = [state.category, ...(state.keywords[state.category] || [])].map(normalize);
   const filtered = state.category === '전체' ? reelsData : reelsData.filter(r => {
-    const text = normalize([r.caption, r.title, r.account].join(' '));
+    const text = normalize([r.caption, r.title, r.account, r.profileDescription].join(' '));
     return keywords.some(keyword => keyword && text.includes(keyword));
   });
   const sorted = filtered.slice().sort((a, b) => (b[f] || 0) - (a[f] || 0));
@@ -525,20 +562,22 @@ function renderReels() {
     el.className = 'card';
     el.innerHTML = `
       <div style="position:relative">
-        <img class="thumb" loading="lazy" src="${/^\/seed\/img\/[a-f0-9]{16}\.(jpg|png|webp)$/.test(r.thumbnail) ? r.thumbnail : '/api/img?u=' + encodeURIComponent(r.thumbnail)}" alt="">
+        <img class="thumb" loading="lazy" alt="">
         <div class="rank${i < 3 ? ' top' : ''}">${i + 1}위</div>
+        <div class="len" style="bottom:8px">▶ 재생</div>
       </div>
       <div class="meta">
         <div class="title"></div>
         <div class="sub">
           ${r.views ? `<span class="${f === 'views' ? 'views' : ''}">👁️ ${fmt2(r.views)}</span>` : ''}
-          <span class="${f === 'likes' ? 'views' : ''}">❤️ ${fmt2(r.likes || 0)}</span>
-          <span class="${f === 'comments' ? 'views' : ''}">💬 ${fmt2(r.comments || 0)}</span>
+          ${r.likes != null ? `<span class="${f === 'likes' ? 'views' : ''}">❤️ ${fmt2(r.likes)}</span>` : ''}
+          ${r.comments != null ? `<span class="${f === 'comments' ? 'views' : ''}">💬 ${fmt2(r.comments)}</span>` : ''}
         </div>
         <div class="sub" style="margin-top:3px"><span>@${r.account}</span></div>
       </div>`;
     el.querySelector('.title').textContent = r.title;
-    el.onclick = () => window.open(r.url, '_blank');
+    el.querySelector('.thumb').src = reelThumbnail(r);
+    el.onclick = () => openReel(r);
     grid.appendChild(el);
   });
   document.getElementById('reelsCount').textContent =

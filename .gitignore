@@ -8,3 +8,6 @@ _site/
 seed_task.log
 .server-output.log
 .server-error.log
+.ig-profile-probe.html
+.reels-probes/
+.reels-live.json

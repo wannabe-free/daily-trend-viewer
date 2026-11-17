@@ -15,6 +15,7 @@ from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import urlparse
 
 import server
+import instagram_reels
 
 OUT = sys.argv[1] if len(sys.argv) > 1 else "_site"
 PERIODS = ("day", "week", "month")
@@ -80,7 +81,8 @@ def download_images(items, field):
 def carry_forward(name, items_key, current):
     """수집 결과가 비었으면 이전 배포 스냅샷과 커밋된 시드(seed/) 중 최신 것을 재사용합니다.
     (집 PC에서만 접근 가능한 소스(imginn 등)를 GitHub 서버가 못 가져올 때의 폴백)"""
-    if current.get(items_key):
+    if current.get(items_key) and (name != "reels.json" or
+            set(current["accounts"]) <= {r["account"] for r in current[items_key]}):
         return current
     prev = None
     try:
@@ -95,12 +97,12 @@ def carry_forward(name, items_key, current):
     except (OSError, json.JSONDecodeError):
         pass
     best, label = None, ""
+    if name == "reels.json":
+        best = instagram_reels.merge_snapshots(current, [prev, seed])
+        label = "계정별 이전 수집분"
     for cand, lab in ((prev, "이전 스냅샷"), (seed, "시드")):
-        if cand and name == "reels.json":
-            # 삭제한 기본 계정이 과거 스냅샷/시드를 통해 다시 섞이지 않도록 합니다.
-            cand = {**cand, "accounts": current["accounts"], "source": "snapshot",
-                    items_key: [r for r in cand.get(items_key, [])
-                                if r.get("account") in current["accounts"]]}
+        if name == "reels.json":
+            break
         if cand and cand.get(items_key) and \
                 (best is None or cand.get("fetchedAt", 0) > best.get("fetchedAt", 0)):
             best, label = cand, lab
@@ -153,10 +155,13 @@ def main():
     collect_videos()
 
     reels, accounts, fetched = server.get_reels(False)
-    reels = reels[:80]
-    n = download_images(reels, "thumbnail")
     data = carry_forward("reels.json", "reels",
-                         {"reels": reels, "accounts": accounts, "fetchedAt": fetched})
+                         {"reels": reels, "accounts": accounts, "fetchedAt": fetched, "source": "live"})
+    n = download_images(data["reels"], "thumbnail")
+    missing = [a for a in accounts if not any(r["account"] == a and r.get("videoUrl")
+               and r.get("thumbnail", "").startswith("img/") for r in data["reels"])]
+    if missing:
+        raise RuntimeError("릴스 영상·썸네일 검증 실패 (빈 사이트 배포 중단): " + ", ".join(missing))
     write_json("reels.json", data)
     print("릴스: %d개 (썸네일 %d개)" % (len(data["reels"]), n))
 

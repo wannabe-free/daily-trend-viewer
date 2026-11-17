@@ -16,6 +16,7 @@ import time
 import urllib.request
 import urllib.error
 import xml.etree.ElementTree as ET
+import instagram_reels
 from concurrent.futures import ThreadPoolExecutor
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs, quote
@@ -61,7 +62,7 @@ PERIOD_EXCLUDE = {
 IG_APP_ID = "936619743392459"  # instagram.com 웹이 쓰는 공개 앱 ID
 ACCOUNTS_FILE = os.path.join(BASE_DIR, "reels_accounts.json")
 DEFAULT_IG_ACCOUNTS = [
-    "rabbit._.habbit", "siho_toon", "skluzy_zetech", "jjan_bubu", "hibi_heebee",
+    "rabbit._.habbit", "siho_toon_", "skluzy_zetech", "jjan_bubu", "hibi_heebee",
     "kim.chiik", "gguldon_", "daily.fishbowl", "bbaekong_toon", "donizoa_",
     "countryside.mouse", "go.ownos", "bbyonggeul",
 ]
@@ -104,8 +105,6 @@ IMG_PROXY_ALLOW = (".cdninstagram.com", ".fbcdn.net", ".ytimg.com",
                    ".googleusercontent.com", ".twimg.com", ".imginn.com",
                    ".tiktokcdn.com", ".tiktokcdn-eu.com", ".tiktokcdn-us.com")
 
-# 인스타그램이 무인증 API를 차단(429)해 미러 사이트를 사용합니다
-IMGINN_BASE = "https://imginn.com"
 # X(트위터) syndication 타임라인 API 폐쇄 대응: nitter RSS로 트윗 목록을 얻고
 # 트윗별 통계는 임베드용 공개 CDN(tweet-result)에서 가져옵니다
 NITTER_INSTANCES = ("nitter.net", "xcancel.com", "nitter.privacyredirect.com")
@@ -294,61 +293,8 @@ ACCOUNT_SOURCES = {
 }
 
 
-def _parse_imginn_time(text: str) -> int:
-    """'July 6th 2026, 06:19 pm' → epoch"""
-    t = re.sub(r"(\d+)(st|nd|rd|th)", r"\1", text.strip())
-    try:
-        return int(datetime.datetime.strptime(t, "%B %d %Y, %I:%M %p").timestamp())
-    except ValueError:
-        return 0
-
-
 def fetch_ig_reels(username: str):
-    """imginn.com(인스타그램 미러)에서 계정의 최근 릴스를 가져옵니다.
-    인스타그램이 무인증 API를 차단(429)해 미러를 사용합니다.
-    미러에는 조회수가 없어 0으로 두고, 좋아요·댓글은 상세 페이지에서 채웁니다."""
-    items = []
-    for path in ("/reels/%s/" % quote(username), "/%s/" % quote(username)):
-        try:
-            _, body = http_get(IMGINN_BASE + path, timeout=15)
-        except Exception:
-            continue
-        page = body.decode("utf-8", "ignore")
-        found = re.findall(
-            r'<div class="item">.*?href="/p/([^/"]+)/".*?<img src="([^"]+)"', page, re.S)
-        if found:
-            items = found[:12]
-            break
-    reels = []
-    for code, thumb in items:
-        likes = comments = taken = 0
-        title = ""
-        try:
-            _, body = http_get(IMGINN_BASE + "/p/%s/" % quote(code), timeout=15)
-            page = body.decode("utf-8", "ignore")
-            m = re.search(r'likes-count.*?<span>([\d,\.]+)</span>', page, re.S)
-            likes = parse_view_count(m.group(1)) if m else 0
-            m = re.search(r'comments-count.*?<span>([\d,\.]+)</span>', page, re.S)
-            comments = parse_view_count(m.group(1)) if m else 0
-            m = re.search(r'<div class="desc">(.*?)</div>', page, re.S)
-            if m:
-                title = htmllib.unescape(re.sub(r"<[^>]+>", "", m.group(1))).strip()
-            m = re.search(r'Posted On:\s*([^<]+)', page)
-            taken = _parse_imginn_time(m.group(1)) if m else 0
-        except Exception:
-            pass
-        reels.append({
-            "account": username,
-            "title": title.split("\n")[0][:120] or "(설명 없음)",
-            "caption": title,
-            "views": 0,
-            "likes": likes,
-            "comments": comments,
-            "thumbnail": htmllib.unescape(thumb),
-            "url": "https://www.instagram.com/p/%s/" % code,
-            "takenAt": taken,
-        })
-    return reels
+    return instagram_reels.fetch_reels(username, http_get)
 
 
 def get_reels(force: bool):
@@ -356,33 +302,29 @@ def get_reels(force: bool):
 
     def fetch():
         # 계정당 상세 페이지를 여러 번 조회하므로 동시성을 낮게 유지합니다
-        with ThreadPoolExecutor(max_workers=3) as pool:
+        with ThreadPoolExecutor(max_workers=2) as pool:
             results = pool.map(fetch_ig_reels, accounts)
         merged = [r for chunk in results for r in chunk]
-        merged.sort(key=lambda r: (r["views"], r["likes"]), reverse=True)
+        merged.sort(key=lambda r: (r.get("views") or 0, r.get("likes") or 0), reverse=True)
         return merged
     reels, fetched_at = cached(("reels", tuple(accounts)), force, fetch)
     return reels, accounts, fetched_at
 
 
 def get_reels_data(force: bool):
-    """실시간 수집 실패 시 구독 계정의 저장된 시드를 날짜·출처와 함께 제공합니다."""
     reels, accounts, fetched_at = get_reels(force)
-    source = "live"
-    if not reels:
-        try:
-            with open(os.path.join(BASE_DIR, "seed", "reels.json"), encoding="utf-8") as f:
-                seed = json.load(f)
-            saved = [r for r in seed.get("reels", []) if r.get("account") in accounts]
-            if saved:
-                reels = [{**r, "thumbnail": "/seed/" + r["thumbnail"]
-                          if r.get("thumbnail", "").startswith("img/") else r.get("thumbnail", "")}
-                         for r in saved]
-                fetched_at = seed["fetchedAt"]
-                source = "snapshot"
-        except (OSError, ValueError, KeyError, TypeError):
-            pass
-    return {"reels": reels[:80], "accounts": accounts, "fetchedAt": fetched_at, "source": source}
+    current = {"reels": reels, "accounts": accounts, "fetchedAt": fetched_at, "source": "live"}
+    snapshots = []
+    try:
+        with open(os.path.join(BASE_DIR, "seed", "reels.json"), encoding="utf-8") as f:
+            seed = json.load(f)
+        for reel in seed.get("reels", []):
+            if reel.get("thumbnail", "").startswith("img/"):
+                reel["thumbnail"] = "/seed/" + reel["thumbnail"]
+        snapshots.append(seed)
+    except (OSError, ValueError, TypeError):
+        pass
+    return instagram_reels.merge_snapshots(current, snapshots)
 
 
 # ================================================================ X (트위터)
