@@ -168,6 +168,7 @@
 </div>
 
 <main>
+  <p class="note" id="categoryKeywords"></p>
   <div id="videoView">
     <div class="status" id="status">불러오는 중...</div>
     <div class="grid" id="grid"></div>
@@ -191,7 +192,7 @@
   </div>
 
   <div id="reelsView" class="ext-section" style="display:none">
-    <p class="note">인스타그램 미러(imginn)를 통해 등록된 계정들의 최신 릴스를 좋아요·댓글 수와 함께 가져옵니다(인스타그램이 무인증 조회를 막아 미러를 사용하며, 조회수는 제공되지 않습니다). 아래에서 즐겨보는 크리에이터 계정을 자유롭게 추가·삭제하세요.</p>
+    <p class="note">등록한 계정들의 릴스를 모아 위 카테고리의 키워드로 설명·계정명을 필터링합니다. 인스타그램 전체 검색은 지원하지 않으므로 관심 분야의 크리에이터 계정을 추가해 주세요. 좋아요·댓글로 정렬할 수 있으며 조회수는 제공되지 않습니다.</p>
     <h2 style="font-size:16px;margin-bottom:10px">👤 구독 계정</h2>
     <div class="acc-chips" id="accChips"></div>
     <div class="addbar">
@@ -199,6 +200,7 @@
       <button id="accAdd">계정 추가</button>
     </div>
     <h2 style="font-size:16px;margin:22px 0 12px">📸 인기 릴스</h2>
+    <p class="note" id="reelsSource" style="display:none"></p>
     <div class="sortbar">
       <div class="sortmenu" id="reelsSortMenu">
         <button class="sorttoggle">정렬: <span class="curlabel">좋아요순</span> <span class="caret">▼</span></button>
@@ -280,7 +282,7 @@
 </div>
 
 <script>
-const state = { tab: 'youtube', category: '전체', period: 'week', categories: ['전체'], search: '' };
+const state = { tab: 'youtube', category: '전체', period: 'week', categories: ['전체'], keywords: {}, search: '' };
 
 const fmt = n => {
   if (n >= 1e8) return (n / 1e8).toFixed(1).replace(/\.0$/, '') + '억회';
@@ -294,7 +296,9 @@ document.getElementById('today').textContent =
 /* ---------- 카테고리 칩 ---------- */
 async function initCategories() {
   const res = await fetch('/api/categories');
-  state.categories = (await res.json()).categories;
+  const data = await res.json();
+  state.categories = data.categories;
+  state.keywords = data.keywords || {};
   renderChips();
 }
 function renderChips() {
@@ -302,15 +306,24 @@ function renderChips() {
   box.innerHTML = '';
   state.categories.forEach(c => {
     const b = document.createElement('button');
-    b.className = 'chip' + (c === state.category && !state.search ? ' active' : '');
+    b.className = 'chip' + (c === state.category && (state.tab === 'reels' || !state.search) ? ' active' : '');
     b.textContent = c;
+    b.title = (state.keywords[c] || []).join(' · ');
     b.onclick = () => {
       state.category = c; state.search = '';
       document.getElementById('searchInput').value = '';
-      renderChips(); loadVideos();
+      renderChips();
+      if (state.tab === 'reels') renderReels();
+      else loadVideos();
     };
     box.appendChild(b);
   });
+  const keywords = document.getElementById('categoryKeywords');
+  const isCategoryTab = ['youtube', 'shorts', 'reels'].includes(state.tab);
+  keywords.style.display = isCategoryTab ? 'block' : 'none';
+  keywords.textContent = state.search && state.tab !== 'reels' ? '검색어: ' + state.search
+    : state.category === '전체' ? '관심 분야: ' + state.categories.slice(1).join(' · ')
+    : (state.tab === 'reels' ? '릴스 필터 키워드: ' : '검색 키워드: ') + (state.keywords[state.category] || []).join(' · ');
 }
 
 /* ---------- 유튜브/쇼츠 영상 ---------- */
@@ -458,8 +471,10 @@ function timeAgo(ts) {
 
 /* ---------- 인스타 릴스 탭 ---------- */
 let reelsData = [];
+let reelsLoadSeq = 0;
 const reelsState = { sort: 'likes' };  // likes | comments | views (미러 소스라 조회수는 없음)
 async function loadReels(force = false) {
+  const seq = ++reelsLoadSeq;
   const status = document.getElementById('reelsStatus');
   const grid = document.getElementById('reelsGrid');
   status.style.display = 'block';
@@ -467,18 +482,24 @@ async function loadReels(force = false) {
   grid.innerHTML = '';
   try {
     const data = await (await fetch('/api/reels' + (force ? '?force=1' : ''))).json();
+    if (seq !== reelsLoadSeq) return;
     renderAccountChips(data.accounts);
+    const source = document.getElementById('reelsSource');
+    source.style.display = data.source === 'snapshot' ? 'block' : 'none';
+    source.textContent = data.source === 'snapshot'
+      ? '실시간 릴스 수집이 제한되어 저장된 데이터를 표시합니다. 수집일: ' + new Date(data.fetchedAt * 1000).toLocaleString('ko-KR') : '';
     document.getElementById('updated').textContent =
       '업데이트: ' + new Date(data.fetchedAt * 1000).toLocaleTimeString('ko-KR');
     reelsData = data.reels || [];
     if (!reelsData.length) {
       document.getElementById('reelsCount').textContent = '';
-      status.textContent = '가져온 릴스가 없습니다. 계정을 추가해 보시거나, 잠시 후 새로고침해 주세요. (인스타그램이 일시적으로 요청을 제한하는 경우가 있습니다)';
+      status.textContent = '등록 계정에서 가져온 릴스가 없습니다. 수집 제한 중에는 위 계정명을 눌러 인스타그램에서 확인할 수 있습니다.';
       return;
     }
     status.style.display = 'none';
     renderReels();
   } catch (e) {
+    if (seq !== reelsLoadSeq) return;
     status.textContent = '불러오기에 실패했습니다. 네트워크를 확인해 주세요.';
   }
 }
@@ -486,14 +507,25 @@ function renderReels() {
   const grid = document.getElementById('reelsGrid');
   const f = reelsState.sort;
   const label = { views: '조회수', likes: '좋아요', comments: '댓글' };
-  const sorted = reelsData.slice().sort((a, b) => (b[f] || 0) - (a[f] || 0));
+  const normalize = text => String(text || '').normalize('NFKC').toLowerCase().replace(/[\s#_-]+/g, '');
+  const keywords = [state.category, ...(state.keywords[state.category] || [])].map(normalize);
+  const filtered = state.category === '전체' ? reelsData : reelsData.filter(r => {
+    const text = normalize([r.caption, r.title, r.account].join(' '));
+    return keywords.some(keyword => keyword && text.includes(keyword));
+  });
+  const sorted = filtered.slice().sort((a, b) => (b[f] || 0) - (a[f] || 0));
+  const status = document.getElementById('reelsStatus');
+  status.style.display = sorted.length ? 'none' : 'block';
+  status.textContent = reelsData.length
+    ? '이 카테고리의 키워드와 일치하는 릴스가 없습니다. 관련 크리에이터 계정을 추가하거나 전체를 선택해 주세요.'
+    : '가져온 릴스가 없습니다. 계정을 추가하거나 잠시 후 새로고침해 주세요.';
   grid.innerHTML = '';
   sorted.forEach((r, i) => {
     const el = document.createElement('div');
     el.className = 'card';
     el.innerHTML = `
       <div style="position:relative">
-        <img class="thumb" loading="lazy" src="/api/img?u=${encodeURIComponent(r.thumbnail)}" alt="">
+        <img class="thumb" loading="lazy" src="${/^\/seed\/img\/[a-f0-9]{16}\.(jpg|png|webp)$/.test(r.thumbnail) ? r.thumbnail : '/api/img?u=' + encodeURIComponent(r.thumbnail)}" alt="">
         <div class="rank${i < 3 ? ' top' : ''}">${i + 1}위</div>
       </div>
       <div class="meta">
@@ -518,8 +550,9 @@ function renderAccountChips(accounts) {
   accounts.forEach(name => {
     const chip = document.createElement('span');
     chip.className = 'acc-chip';
-    chip.innerHTML = `@<b></b><button title="삭제">✕</button>`;
+    chip.innerHTML = `@<a target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none"><b></b></a><button title="삭제">✕</button>`;
     chip.querySelector('b').textContent = name;
+    chip.querySelector('a').href = 'https://www.instagram.com/' + encodeURIComponent(name) + '/';
     chip.querySelector('button').onclick = () => updateAccount('remove', name);
     box.appendChild(chip);
   });
@@ -841,7 +874,10 @@ document.getElementById('tabs').onclick = e => {
   state.tab = btn.dataset.tab;
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t === btn));
   const isVideo = state.tab === 'youtube' || state.tab === 'shorts';
-  document.getElementById('toolbar').style.display = isVideo ? 'flex' : 'none';
+  document.getElementById('toolbar').style.display = isVideo || state.tab === 'reels' ? 'flex' : 'none';
+  document.getElementById('periods').style.display = isVideo ? '' : 'none';
+  document.getElementById('vidSortMenu').style.display = isVideo ? '' : 'none';
+  renderChips();
   document.getElementById('videoView').style.display = isVideo ? 'block' : 'none';
   document.getElementById('aiView').style.display = state.tab === 'ai' ? 'block' : 'none';
   document.getElementById('reelsView').style.display = state.tab === 'reels' ? 'block' : 'none';
@@ -872,6 +908,8 @@ document.getElementById('searchForm').addEventListener('submit', e => {
     state.tab = 'youtube';
     document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === 'youtube'));
     document.getElementById('toolbar').style.display = 'flex';
+    document.getElementById('periods').style.display = '';
+    document.getElementById('vidSortMenu').style.display = '';
     ['videoView','aiView','reelsView','xView','threadsView','tiktokView'].forEach(id =>
       document.getElementById(id).style.display = id === 'videoView' ? 'block' : 'none');
   }

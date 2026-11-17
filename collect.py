@@ -2,7 +2,7 @@
 """GitHub Pages용 정적 스냅샷 빌더.
 server.py의 수집 함수를 재사용해 모든 탭 데이터를 JSON으로 저장하고,
 핫링크가 막힌 썸네일(인스타/틱톡/트위터 CDN)은 내려받아 로컬 파일로 바꿉니다.
-GitHub Actions가 1시간마다 실행해 결과를 GitHub Pages로 배포합니다.
+GitHub Actions가 매일 오전 7시(한국 시간)에 수집을 시작해 GitHub Pages로 배포합니다.
 사용: python3 collect.py [출력폴더=_site]
 """
 import hashlib
@@ -20,13 +20,12 @@ OUT = sys.argv[1] if len(sys.argv) > 1 else "_site"
 PERIODS = ("day", "week", "month")
 IMG_LIMIT = 400  # 스냅샷당 내려받는 썸네일 최대 개수
 # 수집이 실패(0개)한 소스는 이전 배포 스냅샷을 재사용합니다
-PAGES_BASE = os.environ.get("PAGES_BASE", "https://lmorejh.github.io/daily-trend-viewer/")
+PAGES_BASE = os.environ.get("PAGES_BASE", "https://wannabe-free.github.io/daily-trend-viewer/")
 
 # static_shim.js의 SLUG와 반드시 일치해야 합니다 (파일명에 쓸 영문 슬러그)
 CATEGORY_SLUGS = {
-    "전체": "all", "AI": "ai", "먹방": "mukbang", "뷰티/패션": "beauty",
-    "브이로그": "vlog", "예능/코미디": "fun", "영화/드라마": "movie",
-    "테크/IT": "tech", "지식/교육": "edu", "여행": "travel", "동물": "animal",
+    "전체": "all", "AI": "ai", "자기계발": "self-development",
+    "콘텐츠 제작": "content", "재테크": "finance", "부업": "side-hustle", "경매": "auction",
 }
 
 
@@ -97,6 +96,11 @@ def carry_forward(name, items_key, current):
         pass
     best, label = None, ""
     for cand, lab in ((prev, "이전 스냅샷"), (seed, "시드")):
+        if cand and name == "reels.json":
+            # 삭제한 기본 계정이 과거 스냅샷/시드를 통해 다시 섞이지 않도록 합니다.
+            cand = {**cand, "accounts": current["accounts"], "source": "snapshot",
+                    items_key: [r for r in cand.get(items_key, [])
+                                if r.get("account") in current["accounts"]]}
         if cand and cand.get(items_key) and \
                 (best is None or cand.get("fetchedAt", 0) > best.get("fetchedAt", 0)):
             best, label = cand, lab
@@ -138,13 +142,14 @@ def build_site():
 
 
 def main():
-    assert set(CATEGORY_SLUGS) == {"전체", "AI", *server.CATEGORIES}, \
+    assert set(CATEGORY_SLUGS) == {"전체", *server.CATEGORIES}, \
         "server.py 카테고리가 바뀌었습니다. CATEGORY_SLUGS를 갱신하세요."
     t0 = time.time()
     os.makedirs(os.path.join(OUT, "data"), exist_ok=True)
     os.makedirs(os.path.join(OUT, "img"), exist_ok=True)
 
-    write_json("categories.json", {"categories": ["전체", "AI"] + list(server.CATEGORIES)})
+    write_json("categories.json", {"categories": ["전체"] + list(server.CATEGORIES),
+                                   "keywords": server.CATEGORIES})
     collect_videos()
 
     reels, accounts, fetched = server.get_reels(False)

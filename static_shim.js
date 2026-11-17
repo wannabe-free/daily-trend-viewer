@@ -4,9 +4,8 @@
 (() => {
   // collect.py의 CATEGORY_SLUGS와 반드시 일치해야 합니다
   const SLUG = {
-    "전체": "all", "AI": "ai", "먹방": "mukbang", "뷰티/패션": "beauty",
-    "브이로그": "vlog", "예능/코미디": "fun", "영화/드라마": "movie",
-    "테크/IT": "tech", "지식/교육": "edu", "여행": "travel", "동물": "animal",
+    "전체": "all", "AI": "ai", "자기계발": "self-development",
+    "콘텐츠 제작": "content", "재테크": "finance", "부업": "side-hustle", "경매": "auction",
   };
   const jsonResp = obj => Promise.resolve(
     new Response(JSON.stringify(obj), { headers: { "Content-Type": "application/json" } }));
@@ -63,7 +62,7 @@
       "#updated{margin-left:auto}";
     document.head.appendChild(style);
     const badge = document.createElement("div");
-    badge.textContent = "⏱ 1시간마다 자동 수집되는 스냅샷입니다";
+    badge.textContent = "⏱ 매일 오전 7시(한국 시간) 수집을 시작하는 스냅샷입니다";
     badge.style.cssText = "color:var(--muted);font-size:12px";
     document.getElementById("updated").after(badge);
   });

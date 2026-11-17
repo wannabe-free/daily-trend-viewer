@@ -34,20 +34,17 @@ _img_lock = threading.Lock()
 IMG_CACHE_MAX = 600
 
 # ---------------------------------------------------------------- 유튜브
-# 카테고리 → 유튜브 검색어 매핑
+# 카테고리별 검색 키워드 (유튜브/쇼츠 검색 및 릴스 설명 필터에서 공통 사용)
 CATEGORIES = {
-    "먹방": "먹방",
-    "뷰티/패션": "뷰티 메이크업 패션",
-    "브이로그": "브이로그",
-    "예능/코미디": "예능 웃긴 영상",
-    "영화/드라마": "영화 드라마 리뷰",
-    "테크/IT": "테크 리뷰",
-    "지식/교육": "지식 교양",
-    "여행": "여행",
-    "동물": "강아지 고양이",
+    "AI": ["AI 활용법", "챗GPT", "생성형 AI", "AI 자동화"],
+    "자기계발": ["자기계발", "습관 만들기", "시간 관리", "독서"],
+    "콘텐츠 제작": ["콘텐츠 제작", "영상 편집", "쇼츠 만들기", "릴스 제작"],
+    "재테크": ["재테크", "ETF 투자", "절약", "자산 관리"],
+    "부업": ["직장인 부업", "블로그 수익화", "디지털 노마드", "온라인 부업"],
+    "경매": ["부동산 경매", "경매 권리분석", "경매 입찰", "경매 임장"],
 }
 # "전체" 탭은 아래 카테고리들을 합쳐 조회수순으로 재정렬
-ALL_MERGE = ["먹방", "브이로그", "예능/코미디", "뷰티/패션", "영화/드라마", "여행"]
+ALL_MERGE = list(CATEGORIES)
 
 # 검색 필터 protobuf: 업로드 날짜 (2=오늘, 3=이번 주, 4=이번 달)
 PERIOD_CODE = {"day": 2, "week": 3, "month": 4}
@@ -64,8 +61,9 @@ PERIOD_EXCLUDE = {
 IG_APP_ID = "936619743392459"  # instagram.com 웹이 쓰는 공개 앱 ID
 ACCOUNTS_FILE = os.path.join(BASE_DIR, "reels_accounts.json")
 DEFAULT_IG_ACCOUNTS = [
-    "openai", "runwayapp", "pika_labs", "lumalabsai", "midjourney",
-    "klingai_official", "heygen_official", "higgsfield.ai", "googledeepmind",
+    "rabbit._.habbit", "siho_toon", "skluzy_zetech", "jjan_bubu", "hibi_heebee",
+    "kim.chiik", "gguldon_", "daily.fishbowl", "bbaekong_toon", "donizoa_",
+    "countryside.mouse", "go.ownos", "bbyonggeul",
 ]
 
 # ---------------------------------------------------------------- X (트위터)
@@ -93,7 +91,7 @@ TIKWM_BASE = "https://www.tikwm.com/api"
 TIKTOK_REGION = "KR"
 
 # ---------------------------------------------------------------- AI 영상 탭
-AI_YT_QUERIES = ["AI 영상 제작", "AI 영상 생성", "sora ai video", "runway kling veo"]
+AI_YT_QUERIES = CATEGORIES["AI"]
 NEWS_FEEDS = [
     ("국내", "https://news.google.com/rss/search?q=" +
      quote('AI 영상 생성 OR "AI 비디오" OR 영상생성모델') + "&hl=ko&gl=KR&ceid=KR:ko"),
@@ -260,11 +258,9 @@ def get_videos(category: str, period: str, shorts: bool, force: bool, enrich: bo
         if query:
             queries = [query]
         elif category == "전체":
-            queries = [CATEGORIES[c] for c in ALL_MERGE]
-        elif category == "AI":
-            queries = AI_YT_QUERIES
+            queries = [q for c in ALL_MERGE for q in CATEGORIES[c]]
         else:
-            queries = [CATEGORIES.get(category, category)]
+            queries = CATEGORIES.get(category, [category])
         vids = merge_yt_searches(queries, period, shorts)
         if enrich:
             enrich_likes(vids)
@@ -344,6 +340,7 @@ def fetch_ig_reels(username: str):
         reels.append({
             "account": username,
             "title": title.split("\n")[0][:120] or "(설명 없음)",
+            "caption": title,
             "views": 0,
             "likes": likes,
             "comments": comments,
@@ -366,6 +363,26 @@ def get_reels(force: bool):
         return merged
     reels, fetched_at = cached(("reels", tuple(accounts)), force, fetch)
     return reels, accounts, fetched_at
+
+
+def get_reels_data(force: bool):
+    """실시간 수집 실패 시 구독 계정의 저장된 시드를 날짜·출처와 함께 제공합니다."""
+    reels, accounts, fetched_at = get_reels(force)
+    source = "live"
+    if not reels:
+        try:
+            with open(os.path.join(BASE_DIR, "seed", "reels.json"), encoding="utf-8") as f:
+                seed = json.load(f)
+            saved = [r for r in seed.get("reels", []) if r.get("account") in accounts]
+            if saved:
+                reels = [{**r, "thumbnail": "/seed/" + r["thumbnail"]
+                          if r.get("thumbnail", "").startswith("img/") else r.get("thumbnail", "")}
+                         for r in saved]
+                fetched_at = seed["fetchedAt"]
+                source = "snapshot"
+        except (OSError, ValueError, KeyError, TypeError):
+            pass
+    return {"reels": reels[:80], "accounts": accounts, "fetchedAt": fetched_at, "source": source}
 
 
 # ================================================================ X (트위터)
@@ -785,6 +802,18 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(200, f.read(), "text/html; charset=utf-8")
             return
 
+        if re.fullmatch(r"/seed/img/[a-f0-9]{16}\.(?:jpg|png|webp)", parsed.path):
+            path = os.path.join(BASE_DIR, parsed.path.lstrip("/"))
+            try:
+                with open(path, "rb") as f:
+                    body = f.read()
+            except OSError:
+                self._send(404, {"error": "image not found"})
+                return
+            ext = parsed.path.rsplit(".", 1)[-1]
+            self._send(200, body, "image/" + ("jpeg" if ext == "jpg" else ext))
+            return
+
         if parsed.path == "/api/videos":
             category = qs.get("category", ["전체"])[0]
             period = qs.get("period", ["week"])[0]
@@ -799,12 +828,11 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if parsed.path == "/api/categories":
-            self._send(200, {"categories": ["전체", "AI"] + list(CATEGORIES.keys())})
+            self._send(200, {"categories": ["전체"] + list(CATEGORIES), "keywords": CATEGORIES})
             return
 
         if parsed.path == "/api/reels":
-            reels, accounts, fetched_at = get_reels(force)
-            self._send(200, {"reels": reels[:80], "accounts": accounts, "fetchedAt": fetched_at})
+            self._send(200, get_reels_data(force))
             return
 
         if parsed.path == "/api/x":
