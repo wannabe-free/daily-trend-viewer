@@ -8,9 +8,12 @@ GitHub Actions가 매일 오전 7시(한국 시간)에 수집을 시작해 GitHu
 import hashlib
 import json
 import os
+import re
 import shutil
 import sys
 import time
+import threading
+import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import urlparse
 
@@ -76,6 +79,60 @@ def download_images(items, field):
         if u in mapping:
             it[field] = mapping[u]
     return len(mapping)
+
+
+def download_reel_media(reels):
+    """Persist real MP4s in the Pages artifact so signed CDN URLs can expire safely."""
+    media_dir = os.path.join(OUT, "media")
+    os.makedirs(media_dir, exist_ok=True)
+    budget, lock = {"bytes": 0}, threading.Lock()
+
+    def fetch(reel):
+        original = reel.get("videoUrl") or ""
+        if re.fullmatch(r"media/[a-f0-9]{16}\.mp4", original):
+            url, name = PAGES_BASE + original, original.split("/")[1]
+        elif instagram_reels.is_instagram_media(original):
+            url = original
+            name = hashlib.sha1((reel["account"] + "/" + reel["id"]).encode()).hexdigest()[:16] + ".mp4"
+        else:
+            return False
+        dest = os.path.join(media_dir, name)
+        temp = dest + ".part"
+        try:
+            request = urllib.request.Request(url, headers={"User-Agent": server.UA})
+            with urllib.request.urlopen(request, timeout=45) as response, open(temp, "wb") as output:
+                if int(response.headers.get("Content-Length", "0")) > 64 * 1024 * 1024:
+                    raise ValueError("reel exceeds media size limit")
+                first = True
+                total = 0
+                while True:
+                    chunk = response.read(1024 * 1024)
+                    if not chunk:
+                        break
+                    if first and b"ftyp" not in chunk[:32]:
+                        raise ValueError("not an MP4 response")
+                    first = False
+                    total += len(chunk)
+                    with lock:
+                        budget["bytes"] += len(chunk)
+                        if budget["bytes"] > 650 * 1024 * 1024 or total > 64 * 1024 * 1024:
+                            raise ValueError("Pages media budget exceeded")
+                    output.write(chunk)
+                if first:
+                    raise ValueError("empty MP4 response")
+            os.replace(temp, dest)
+            reel["videoUrl"] = "media/" + name
+            return True
+        except (OSError, ValueError):
+            reel["videoUrl"] = ""
+            if os.path.exists(temp):
+                os.remove(temp)
+            return False
+
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        saved = sum(pool.map(fetch, reels))
+    print("릴스 MP4 저장: %d개, %.1f MiB" % (saved, budget["bytes"] / 1024 / 1024), flush=True)
+    return saved
 
 
 def carry_forward(name, items_key, current):
@@ -155,13 +212,12 @@ def main():
     collect_videos()
 
     reels, accounts, fetched = server.get_reels(False)
-    missing_live = [a for a in accounts if not any(r["account"] == a for r in reels)]
-    if missing_live and os.environ.get("IG_BROWSER_FALLBACK") == "1":
-        import instagram_browser
-        reels.extend(instagram_browser.fetch_accounts(missing_live))
     data = carry_forward("reels.json", "reels",
                          {"reels": reels, "accounts": accounts, "fetchedAt": fetched, "source": "live"})
     n = download_images(data["reels"], "thumbnail")
+    download_reel_media(data["reels"])
+    data["reels"] = [r for r in data["reels"] if re.fullmatch(r"media/[a-f0-9]{16}\.mp4", r.get("videoUrl", ""))
+                     and r.get("thumbnail", "").startswith("img/")]
     missing = [a for a in accounts if not any(r["account"] == a and r.get("videoUrl")
                and r.get("thumbnail", "").startswith("img/") for r in data["reels"])]
     if missing:

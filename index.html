@@ -521,12 +521,15 @@ async function loadReels(force = false) {
     missing.style.display = (data.missingAccounts || []).length ? 'block' : 'none';
     missing.textContent = '이번 수집에서 확인되지 않은 계정: ' + (data.missingAccounts || []).join(', ');
     const source = document.getElementById('reelsSource');
+    const collectedAt = Math.max(0, ...(data.reels || []).map(r => r.collectedAt || 0)) || data.fetchedAt;
     source.style.display = data.source === 'snapshot' || (data.cachedAccounts || []).length ? 'block' : 'none';
-    source.textContent = (data.cachedAccounts || []).length
+    source.textContent = data.source === 'snapshot'
+      ? '현재는 ' + new Date(collectedAt * 1000).toLocaleString('ko-KR') + '에 수집한 릴스를 표시합니다. 새 수집이 제한되어 저장된 영상을 유지하고 있습니다.'
+      : (data.cachedAccounts || []).length
       ? '일시적으로 수집되지 않은 계정은 이전 수집분을 유지합니다: ' + data.cachedAccounts.join(', ')
-      : data.source === 'snapshot' ? '저장된 릴스입니다. 수집일: ' + new Date(data.fetchedAt * 1000).toLocaleString('ko-KR') : '';
+      : '';
     document.getElementById('updated').textContent =
-      '업데이트: ' + new Date(data.fetchedAt * 1000).toLocaleTimeString('ko-KR');
+      '수집: ' + new Date(collectedAt * 1000).toLocaleString('ko-KR');
     reelsData = data.reels || [];
     if (!reelsData.length) {
       document.getElementById('reelsCount').textContent = '';
