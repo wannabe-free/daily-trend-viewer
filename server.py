@@ -51,6 +51,7 @@ ALL_MERGE = list(CATEGORIES)
 REELS_CATEGORIES = {"AI": ["AI 활용법", "챗GPT", "생성형 AI", "AI 자동화"],
                     "GPT 활용": ["GPT", "챗GPT", "챗지피티", "프롬프트"],
                     "미리캔버스": ["미리캔버스", "기여자", "스톡작가", "디지털 드로잉"],
+                    "블로그": ["네이버 블로그", "블로그 운영", "블로그 글쓰기", "블로그 수익화", "애드포스트"],
                     "맛집": ["맛집", "먹방", "맛집추천", "카페"],
                     "여행": ["여행", "숙소", "관광", "여행코스"],
                     **{name: keywords for name, keywords in CATEGORIES.items()
@@ -87,6 +88,8 @@ DEFAULT_IG_ACCOUNTS = [
     "countryside.mouse", "go.ownos", "bbyonggeul",
     "sorea_im", "zzan.boo", "grappt_", "haniee_im", "gojaehyun.go",
     "studio_hongcha", "luck.iwi", "mel.d_illust", "kidari.192", "parkyeny", "h.tw92",
+    "hey.donnana", "yuriha_94", "kennenblog", "coco._records", "mukbbo_date",
+    "_dukong_", "berryoungst", "muk_zzangbin", "jejumisscha",
 ]
 
 # ---------------------------------------------------------------- X (트위터)

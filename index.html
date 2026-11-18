@@ -633,6 +633,17 @@ function renderAccountChips(accounts) {
     link.target = '_blank'; link.rel = 'noopener noreferrer'; link.style.color = 'var(--accent)';
     link.textContent = '@' + name; accountCell.appendChild(link);
     accountCell.appendChild(document.createTextNode(' · ' + info.categories.join(' / ')));
+    if (info.searchHit) {
+      const hit = document.createElement('a');
+      hit.href = 'https://www.instagram.com/reel/' + encodeURIComponent(info.searchHit.shortcode) + '/';
+      hit.target = '_blank';
+      hit.rel = 'noopener noreferrer';
+      hit.style.color = 'var(--accent)';
+      hit.textContent = `${info.searchHit.query} · 검색 ${info.searchHit.position}번째 게시물`;
+      hit.title = `${info.searchHit.checkedDate} 인스타그램 검색 화면에서 확인한 순서입니다. 결과는 계정과 시점에 따라 달라질 수 있습니다.`;
+      accountCell.appendChild(document.createElement('br'));
+      accountCell.appendChild(hit);
+    }
     row.appendChild(accountCell);
     [info.followers.toLocaleString(), info.medianEngagementPercent + '%', info.medianViews.toLocaleString(), info.publicStatsSize + '/' + info.sampleSize].forEach(value => {
       const cell = document.createElement('td'); cell.textContent = value; cell.style.padding = '7px 8px'; row.appendChild(cell);

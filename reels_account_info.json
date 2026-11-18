@@ -269,6 +269,267 @@
         "https://www.instagram.com/reel/DfpHuhFSq7o/",
         "https://www.instagram.com/reel/Dfl1_eOy4B7/"
       ]
+    },
+    "hey.donnana": {
+      "name": "돈나나 | AI+블로그",
+      "categories": [
+        "블로그"
+      ],
+      "profileUrl": "https://www.instagram.com/hey.donnana/",
+      "followers": 14413,
+      "sampleSize": 6,
+      "publicStatsSize": 6,
+      "medianEngagementPercent": 0.41,
+      "medianViews": 8634.5,
+      "medianLikes": 56.0,
+      "medianComments": 4.0,
+      "medianViewFollowerPercent": 59.91,
+      "sampleUrls": [
+        "https://www.instagram.com/reel/Df3zthSzgMP/",
+        "https://www.instagram.com/reel/DfWdiRfPvCt/",
+        "https://www.instagram.com/reel/De8xH-Gzvdf/",
+        "https://www.instagram.com/reel/Def0E7ozFmx/",
+        "https://www.instagram.com/reel/DeY-pMhTQ5i/",
+        "https://www.instagram.com/reel/DeQwcR3zio4/"
+      ],
+      "searchHit": {
+        "query": "네이버 블로그 운영",
+        "position": 3,
+        "shortcode": "DdtsTCuzjyb",
+        "checkedDate": "2026-11-18"
+      }
+    },
+    "yuriha_94": {
+      "name": "yuriha_94",
+      "categories": [
+        "블로그"
+      ],
+      "profileUrl": "https://www.instagram.com/yuriha_94/",
+      "followers": 13425,
+      "sampleSize": 6,
+      "publicStatsSize": 6,
+      "medianEngagementPercent": 3.47,
+      "medianViews": 10841.0,
+      "medianLikes": 122.0,
+      "medianComments": 344.0,
+      "medianViewFollowerPercent": 80.75,
+      "sampleUrls": [
+        "https://www.instagram.com/reel/Dfy7OUWoshO/",
+        "https://www.instagram.com/reel/DfjJZXABYyV/",
+        "https://www.instagram.com/reel/De_AsMABqcu/",
+        "https://www.instagram.com/reel/Dd0E5ZgBRoT/",
+        "https://www.instagram.com/reel/Dda4DzVB83B/",
+        "https://www.instagram.com/reel/Dc-veTdhPRi/"
+      ],
+      "searchHit": {
+        "query": "네이버 블로그 운영",
+        "position": 10,
+        "shortcode": "DfjJZXABYyV",
+        "checkedDate": "2026-11-18"
+      }
+    },
+    "kennenblog": {
+      "name": "갓생사는 케넨의 하루 | 조수정",
+      "categories": [
+        "블로그"
+      ],
+      "profileUrl": "https://www.instagram.com/kennenblog/",
+      "followers": 225467,
+      "sampleSize": 6,
+      "publicStatsSize": 6,
+      "medianEngagementPercent": 2.49,
+      "medianViews": 293970.0,
+      "medianLikes": 1743.5,
+      "medianComments": 1451.0,
+      "medianViewFollowerPercent": 130.38,
+      "sampleUrls": [
+        "https://www.instagram.com/reel/Dfzflr1p7NG/",
+        "https://www.instagram.com/reel/DfhA-whJiqc/",
+        "https://www.instagram.com/reel/DfKG7JuJ_fW/",
+        "https://www.instagram.com/reel/DfBLg8tTQlU/",
+        "https://www.instagram.com/reel/DetO1sDJFQr/",
+        "https://www.instagram.com/reel/DeomChNJ24C/"
+      ],
+      "searchHit": {
+        "query": "네이버 블로그 운영",
+        "position": 12,
+        "shortcode": "DIa5j2KPwkc",
+        "checkedDate": "2026-11-18"
+      }
+    },
+    "coco._records": {
+      "name": "코코 | F&B · CAFE · TRAVEL · SPACE",
+      "categories": [
+        "맛집"
+      ],
+      "profileUrl": "https://www.instagram.com/coco._records/",
+      "followers": 10300,
+      "sampleSize": 6,
+      "publicStatsSize": 6,
+      "medianEngagementPercent": 3.91,
+      "medianViews": 7692.5,
+      "medianLikes": 262.0,
+      "medianComments": 132.0,
+      "medianViewFollowerPercent": 74.68,
+      "sampleUrls": [
+        "https://www.instagram.com/reel/Df1gqIChJl7/",
+        "https://www.instagram.com/reel/DfwW5GRyl9d/",
+        "https://www.instagram.com/reel/DfuIE8UyFh9/",
+        "https://www.instagram.com/reel/DfpHkfsB5mv/",
+        "https://www.instagram.com/reel/Dfj05-ehfYk/",
+        "https://www.instagram.com/reel/DfUBiTKBFhl/"
+      ],
+      "searchHit": {
+        "query": "서울 맛집",
+        "position": 2,
+        "shortcode": "Db29K-7B6wj",
+        "checkedDate": "2026-11-18"
+      }
+    },
+    "mukbbo_date": {
+      "name": "먹뽀 | 데이트코스•핫플•맛집",
+      "categories": [
+        "맛집"
+      ],
+      "profileUrl": "https://www.instagram.com/mukbbo_date/",
+      "followers": 23907,
+      "sampleSize": 6,
+      "publicStatsSize": 6,
+      "medianEngagementPercent": 0.85,
+      "medianViews": 24025.0,
+      "medianLikes": 152.0,
+      "medianComments": 39.5,
+      "medianViewFollowerPercent": 100.49,
+      "sampleUrls": [
+        "https://www.instagram.com/reel/Dfy_SYfh_Q3/",
+        "https://www.instagram.com/reel/DfpEBpGBysI/",
+        "https://www.instagram.com/reel/DflzfDbBvsU/",
+        "https://www.instagram.com/reel/De6t7T7BbKq/",
+        "https://www.instagram.com/reel/De1L3Q9B5Wx/",
+        "https://www.instagram.com/reel/DerVIxjBIfX/"
+      ],
+      "searchHit": {
+        "query": "서울 맛집",
+        "position": 6,
+        "shortcode": "DKxu44BzBrJ",
+        "checkedDate": "2026-11-18"
+      }
+    },
+    "_dukong_": {
+      "name": "똘콩 | 부산맛집 부산카페 부산노포",
+      "categories": [
+        "맛집"
+      ],
+      "profileUrl": "https://www.instagram.com/_dukong_/",
+      "followers": 18995,
+      "sampleSize": 6,
+      "publicStatsSize": 6,
+      "medianEngagementPercent": 1.09,
+      "medianViews": 23962.5,
+      "medianLikes": 197.0,
+      "medianComments": 13.0,
+      "medianViewFollowerPercent": 126.15,
+      "sampleUrls": [
+        "https://www.instagram.com/reel/DfwVBVnpf1T/",
+        "https://www.instagram.com/reel/Df1AM3ZJNPO/",
+        "https://www.instagram.com/reel/Df0-TfVJ2Hi/",
+        "https://www.instagram.com/reel/DfzHh2qJKWv/",
+        "https://www.instagram.com/reel/Dfo56popbYC/",
+        "https://www.instagram.com/reel/Dfold5vJb0i/"
+      ],
+      "searchHit": {
+        "query": "부산 맛집",
+        "position": 4,
+        "shortcode": "DXvSSVWJPaz",
+        "checkedDate": "2026-11-18"
+      }
+    },
+    "berryoungst": {
+      "name": "강딸기 ❦ 대구맛집 대구카페 대구데이트",
+      "categories": [
+        "맛집"
+      ],
+      "profileUrl": "https://www.instagram.com/berryoungst/",
+      "followers": 12397,
+      "sampleSize": 6,
+      "publicStatsSize": 6,
+      "medianEngagementPercent": 1.21,
+      "medianViews": 15395.5,
+      "medianLikes": 126.5,
+      "medianComments": 18.5,
+      "medianViewFollowerPercent": 124.19,
+      "sampleUrls": [
+        "https://www.instagram.com/reel/Df1z0YSR9FP/",
+        "https://www.instagram.com/reel/DfwjQakBMp9/",
+        "https://www.instagram.com/reel/DfmG5UjvTIm/",
+        "https://www.instagram.com/reel/DfcMOdbsgiD/",
+        "https://www.instagram.com/reel/DfW5JZIsl_a/",
+        "https://www.instagram.com/reel/DfPD6-nusN6/"
+      ],
+      "searchHit": {
+        "query": "대구 맛집",
+        "position": 1,
+        "shortcode": "DbOB5DVR4dB",
+        "checkedDate": "2026-11-18"
+      }
+    },
+    "muk_zzangbin": {
+      "name": "먹짱빈 [대구맛집/대구노포/숨은맛집]",
+      "categories": [
+        "맛집"
+      ],
+      "profileUrl": "https://www.instagram.com/muk_zzangbin/",
+      "followers": 32483,
+      "sampleSize": 6,
+      "publicStatsSize": 6,
+      "medianEngagementPercent": 1.18,
+      "medianViews": 44472.0,
+      "medianLikes": 310.5,
+      "medianComments": 80.0,
+      "medianViewFollowerPercent": 136.91,
+      "sampleUrls": [
+        "https://www.instagram.com/reel/Df1eFXrSDZk/",
+        "https://www.instagram.com/reel/Df1B8rsSxD8/",
+        "https://www.instagram.com/reel/Dfy1aIsSssI/",
+        "https://www.instagram.com/reel/DfwlegASAmN/",
+        "https://www.instagram.com/reel/DfrDe8_ykHl/",
+        "https://www.instagram.com/reel/DfozwcGSuHF/"
+      ],
+      "searchHit": {
+        "query": "대구 맛집",
+        "position": 2,
+        "shortcode": "DYEDuMdydDR",
+        "checkedDate": "2026-11-18"
+      }
+    },
+    "jejumisscha": {
+      "name": "제주미스차 |제주살이10년차감성카페·맛집·여행.일상",
+      "categories": [
+        "맛집"
+      ],
+      "profileUrl": "https://www.instagram.com/jejumisscha/",
+      "followers": 12502,
+      "sampleSize": 6,
+      "publicStatsSize": 6,
+      "medianEngagementPercent": 1.03,
+      "medianViews": 10446.5,
+      "medianLikes": 110.5,
+      "medianComments": 14.0,
+      "medianViewFollowerPercent": 83.56,
+      "sampleUrls": [
+        "https://www.instagram.com/reel/DfwfDhryRz6/",
+        "https://www.instagram.com/reel/Df2vilWy7Dp/",
+        "https://www.instagram.com/reel/Df2E2vkzy9e/",
+        "https://www.instagram.com/reel/Df0j1cETNTP/",
+        "https://www.instagram.com/reel/DfvMqqJyBOj/",
+        "https://www.instagram.com/reel/DfdWtWqSOWm/"
+      ],
+      "searchHit": {
+        "query": "제주 맛집",
+        "position": 9,
+        "shortcode": "DaKrnlHyx-h",
+        "checkedDate": "2026-11-18"
+      }
     }
   }
 }

@@ -23,7 +23,7 @@ import instagram_reels
 OUT = sys.argv[1] if len(sys.argv) > 1 else "_site"
 PERIODS = ("day", "week", "month")
 IMG_LIMIT = 400  # 스냅샷당 내려받는 썸네일 최대 개수
-REEL_MEDIA_LIMIT = 850 * 1024 * 1024  # Pages 1 GB 한도 안에서 썸네일·JSON 용량을 남깁니다.
+REEL_MEDIA_LIMIT = 920 * 1024 * 1024  # Pages 1 GB 한도 안에서 썸네일·JSON 용량을 남깁니다.
 # 수집이 실패(0개)한 소스는 이전 배포 스냅샷을 재사용합니다
 PAGES_BASE = os.environ.get("PAGES_BASE", "https://wannabe-free.github.io/daily-trend-viewer/")
 
@@ -114,14 +114,16 @@ def download_reel_media(reels):
                         raise ValueError("not an MP4 response")
                     first = False
                     total += len(chunk)
-                    with lock:
-                        budget["bytes"] += len(chunk)
-                        if budget["bytes"] > REEL_MEDIA_LIMIT or total > 64 * 1024 * 1024:
-                            raise ValueError("Pages media budget exceeded")
+                    if total > 64 * 1024 * 1024:
+                        raise ValueError("reel exceeds media size limit")
                     output.write(chunk)
                 if first:
                     raise ValueError("empty MP4 response")
-            os.replace(temp, dest)
+            with lock:
+                if budget["bytes"] + total > REEL_MEDIA_LIMIT:
+                    raise ValueError("Pages media budget exceeded")
+                os.replace(temp, dest)
+                budget["bytes"] += total
             reel["videoUrl"] = "media/" + name
             return True
         except (OSError, ValueError):
