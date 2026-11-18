@@ -73,7 +73,7 @@ def is_instagram_media(url):
 
 
 def merge_snapshots(current, snapshots):
-    """Keep current data; fill only missing accounts from their newest saved snapshot."""
+    """Keep current data and restore missing accounts from newest saved reels first."""
     accounts = current["accounts"]
     reels = [dict(r) for r in current.get("reels", []) if r.get("account") in accounts]
     cached_accounts = []
@@ -82,13 +82,19 @@ def merge_snapshots(current, snapshots):
     for account in accounts:
         if any(r["account"] == account for r in reels):
             continue
+        saved_codes = set()
         for snapshot in snapshots:
-            saved = [r for r in snapshot.get("reels", []) if r.get("account") == account]
-            if saved:
-                reels.extend({**r, "cached": True, "collectedAt": r.get("collectedAt", snapshot.get("fetchedAt"))}
-                             for r in saved[:REELS_PER_ACCOUNT])
-                cached_accounts.append(account)
+            for reel in snapshot.get("reels", []):
+                if reel.get("account") != account or reel.get("id") in saved_codes:
+                    continue
+                reels.append({**reel, "cached": True, "collectedAt": reel.get("collectedAt", snapshot.get("fetchedAt"))})
+                saved_codes.add(reel.get("id"))
+                if len(saved_codes) >= REELS_PER_ACCOUNT:
+                    break
+            if len(saved_codes) >= REELS_PER_ACCOUNT:
                 break
+        if saved_codes:
+            cached_accounts.append(account)
     reels.sort(key=lambda r: r.get("likes") or 0, reverse=True)
     if cached_accounts:
         source = "snapshot" if all(r.get("cached") for r in reels) else "mixed"
