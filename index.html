@@ -312,6 +312,7 @@ async function initCategories() {
   state.keywords = data.keywords || {};
   state.reelsCategories = data.reelsCategories || data.categories;
   state.reelsReference = data.reelsReference || {};
+  state.reelsAccountGroups = data.reelsAccountGroups || {};
   state.reelsKeywords = data.reelsKeywords || data.keywords || {};
   renderChips();
 }
@@ -534,7 +535,7 @@ async function loadReels(force = false) {
     renderAccountChips(data.accounts);
     const missing = document.getElementById('reelsMissing');
     missing.style.display = (data.missingAccounts || []).length ? 'block' : 'none';
-    missing.textContent = '이번 수집에서 확인되지 않은 계정: ' + (data.missingAccounts || []).join(', ');
+    missing.textContent = '현재 표시할 영상이 없는 계정 (위 계정명으로 원본 프로필 열기): ' + (data.missingAccounts || []).join(', ');
     const source = document.getElementById('reelsSource');
     const collectedAt = Math.max(0, ...(data.reels || []).map(r => r.collectedAt || 0)) || data.fetchedAt;
     source.style.display = data.source === 'snapshot' || (data.cachedAccounts || []).length ? 'block' : 'none';
@@ -566,7 +567,7 @@ function renderReels() {
   const keywords = [state.category, ...(state.reelsKeywords[state.category] || [])].map(normalize);
   const filtered = state.category === '전체' ? reelsData : reelsData.filter(r => {
     const tags = state.reelsReference.accounts?.[r.account]?.categories || [];
-    if (tags.includes(state.category)) return true;
+    if (tags.includes(state.category) || state.reelsAccountGroups?.[state.category]?.includes(r.account)) return true;
     const text = normalize([r.caption, r.title, r.account, r.profileDescription].join(' '));
     return keywords.some(keyword => keyword && text.includes(keyword));
   });

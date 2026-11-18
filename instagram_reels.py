@@ -90,7 +90,10 @@ def merge_snapshots(current, snapshots):
                 cached_accounts.append(account)
                 break
     reels.sort(key=lambda r: r.get("likes") or 0, reverse=True)
-    source = "snapshot" if cached_accounts and len(cached_accounts) == len(accounts) else "mixed" if cached_accounts else current.get("source", "live")
+    if cached_accounts:
+        source = "snapshot" if all(r.get("cached") for r in reels) else "mixed"
+    else:
+        source = current.get("source", "live")
     return {**current, "reels": reels, "source": source, "cachedAccounts": cached_accounts,
             "missingAccounts": [a for a in accounts if not any(r["account"] == a for r in reels)]}
 

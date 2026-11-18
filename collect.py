@@ -10,9 +10,9 @@ import json
 import os
 import re
 import shutil
+import subprocess
 import sys
 import time
-import threading
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import urlparse
@@ -24,6 +24,7 @@ OUT = sys.argv[1] if len(sys.argv) > 1 else "_site"
 PERIODS = ("day", "week", "month")
 IMG_LIMIT = 400  # 스냅샷당 내려받는 썸네일 최대 개수
 REEL_MEDIA_LIMIT = 920 * 1024 * 1024  # Pages 1 GB 한도 안에서 썸네일·JSON 용량을 남깁니다.
+REEL_MEDIA_TARGET = 850 * 1024 * 1024  # 압축이 필요한 배포는 다음 수집분을 위한 여유를 확보합니다.
 # 수집이 실패(0개)한 소스는 이전 배포 스냅샷을 재사용합니다
 PAGES_BASE = os.environ.get("PAGES_BASE", "https://wannabe-free.github.io/daily-trend-viewer/")
 
@@ -82,11 +83,51 @@ def download_images(items, field):
     return len(mapping)
 
 
+def fit_reel_media_budget(paths):
+    sizes = sorted(((os.path.getsize(path), path) for path in paths), reverse=True)
+    total = sum(size for size, _ in sizes)
+    if total <= REEL_MEDIA_LIMIT:
+        return total
+    ffmpeg = shutil.which("ffmpeg")
+    if not ffmpeg:
+        raise RuntimeError("릴스 용량을 줄이려면 FFmpeg가 필요합니다.")
+
+    print("릴스 MP4 용량 조정: %.1f MiB" % (total / 1024**2), flush=True)
+    optimized = 0
+    for size, path in sizes:
+        if total <= REEL_MEDIA_TARGET:
+            break
+        temp = path + ".compact.mp4"
+        try:
+            subprocess.run([
+                ffmpeg, "-hide_banner", "-loglevel", "error", "-nostdin", "-y",
+                "-xerror", "-threads", "2", "-filter_threads", "1",
+                "-protocol_whitelist", "file", "-f", "mov", "-i", path,
+                "-map", "0:v:0", "-map", "0:a:0?",
+                "-vf", "scale=w='min(540,iw)':h='min(960,ih)':force_original_aspect_ratio=decrease:force_divisible_by=2",
+                "-c:v", "libx264", "-preset", "veryfast", "-crf", "26", "-threads", "2",
+                "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "96k", "-movflags", "+faststart", temp,
+            ], check=True, capture_output=True, timeout=90)
+            new_size = os.path.getsize(temp)
+            if 0 < new_size < size:
+                os.replace(temp, path)
+                total -= size - new_size
+                optimized += 1
+        except (OSError, subprocess.SubprocessError):
+            print("릴스 원본 유지: " + os.path.basename(path), flush=True)
+        finally:
+            if os.path.exists(temp):
+                os.remove(temp)
+    print("릴스 MP4 압축: %d개" % optimized, flush=True)
+    if total > REEL_MEDIA_LIMIT:
+        raise RuntimeError("릴스 용량이 Pages 배포 한도를 초과합니다.")
+    return total
+
+
 def download_reel_media(reels):
     """Persist real MP4s in the Pages artifact so signed CDN URLs can expire safely."""
     media_dir = os.path.join(OUT, "media")
     os.makedirs(media_dir, exist_ok=True)
-    budget, lock = {"bytes": 0}, threading.Lock()
 
     def fetch(reel):
         original = reel.get("videoUrl") or ""
@@ -119,13 +160,9 @@ def download_reel_media(reels):
                     output.write(chunk)
                 if first:
                     raise ValueError("empty MP4 response")
-            with lock:
-                if budget["bytes"] + total > REEL_MEDIA_LIMIT:
-                    raise ValueError("Pages media budget exceeded")
-                os.replace(temp, dest)
-                budget["bytes"] += total
+            os.replace(temp, dest)
             reel["videoUrl"] = "media/" + name
-            return True
+            return dest
         except (OSError, ValueError):
             reel["videoUrl"] = ""
             if os.path.exists(temp):
@@ -133,9 +170,10 @@ def download_reel_media(reels):
             return False
 
     with ThreadPoolExecutor(max_workers=4) as pool:
-        saved = sum(pool.map(fetch, reels))
-    print("릴스 MP4 저장: %d개, %.1f MiB" % (saved, budget["bytes"] / 1024 / 1024), flush=True)
-    return saved
+        saved = {path for path in pool.map(fetch, reels) if path}
+    size = fit_reel_media_budget(saved)
+    print("릴스 MP4 저장: %d개, %.1f MiB" % (len(saved), size / 1024**2), flush=True)
+    return len(saved)
 
 
 def carry_forward(name, items_key, current):
@@ -216,14 +254,16 @@ def main():
     reels, accounts, fetched = server.get_reels(False)
     data = carry_forward("reels.json", "reels",
                          {"reels": reels, "accounts": accounts, "fetchedAt": fetched, "source": "live"})
+    expected = {r["account"] for r in data["reels"]}
     n = download_images(data["reels"], "thumbnail")
     download_reel_media(data["reels"])
     data["reels"] = [r for r in data["reels"] if re.fullmatch(r"media/[a-f0-9]{16}\.mp4", r.get("videoUrl", ""))
                      and r.get("thumbnail", "").startswith("img/")]
-    missing = [a for a in accounts if not any(r["account"] == a and r.get("videoUrl")
-               and r.get("thumbnail", "").startswith("img/") for r in data["reels"])]
-    if missing:
-        raise RuntimeError("릴스 영상·썸네일 검증 실패 (빈 사이트 배포 중단): " + ", ".join(missing))
+    available = {r["account"] for r in data["reels"]}
+    failed = expected - available
+    if failed or (accounts and not available):
+        raise RuntimeError("릴스 영상·썸네일 검증 실패: " + ", ".join(sorted(failed or set(accounts))))
+    data["missingAccounts"] = [account for account in accounts if account not in available]
     write_json("reels.json", data)
     print("릴스: %d개 (썸네일 %d개)" % (len(data["reels"]), n))
 

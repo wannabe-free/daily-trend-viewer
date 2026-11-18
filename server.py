@@ -52,10 +52,22 @@ REELS_CATEGORIES = {"AI": ["AI 활용법", "챗GPT", "생성형 AI", "AI 자동�
                     "GPT 활용": ["GPT", "챗GPT", "챗지피티", "프롬프트"],
                     "미리캔버스": ["미리캔버스", "기여자", "스톡작가", "디지털 드로잉"],
                     "블로그": ["네이버 블로그", "블로그 운영", "블로그 글쓰기", "블로그 수익화", "애드포스트"],
+                    "그림": ["드로잉", "일러스트", "그림 그리기", "이모티콘 만들기", "스톡작가"],
                     "맛집": ["맛집", "먹방", "맛집추천", "카페"],
                     "여행": ["여행", "숙소", "관광", "여행코스"],
                     **{name: keywords for name, keywords in CATEGORIES.items()
                        if name not in ("AI 활용", "AI 툴")}}
+
+REELS_ACCOUNT_GROUPS = {
+    "맛집": (
+        "jack__foodie", "fine_yepple", "ruri.food", "nemo_in_haru", "lovyeum",
+        "eat_gow", "a.zihyyyy", "eun_foodi", "kimcoffee_c", "hey_jihye",
+        "hid_zip", "reneve__", "young_foodie__", "sugapick", "mukgenie",
+        "chloe__story", "eatbocke", "mat_tam_gyeon", "maasi_.chaa",
+    ),
+    "재테크": ("dontori_fire",),
+    "그림": ("ddungezakka", "studio_hongcha"),
+}
 
 
 def category_config():
@@ -66,7 +78,8 @@ def category_config():
         reference = {}
     return {"categories": ["전체"] + list(CATEGORIES), "keywords": CATEGORIES,
             "reelsCategories": ["전체"] + list(REELS_CATEGORIES), "reelsKeywords": REELS_CATEGORIES,
-            "reelsReference": reference}
+            "reelsReference": reference,
+            "reelsAccountGroups": REELS_ACCOUNT_GROUPS}
 
 # 검색 필터 protobuf: 업로드 날짜 (2=오늘, 3=이번 주, 4=이번 달)
 PERIOD_CODE = {"day": 2, "week": 3, "month": 4}
@@ -82,7 +95,7 @@ PERIOD_EXCLUDE = {
 # ---------------------------------------------------------------- 인스타그램 릴스
 IG_APP_ID = "936619743392459"  # instagram.com 웹이 쓰는 공개 앱 ID
 ACCOUNTS_FILE = os.path.join(BASE_DIR, "reels_accounts.json")
-DEFAULT_IG_ACCOUNTS = [
+DEFAULT_IG_ACCOUNTS = list(dict.fromkeys([
     "rabbit._.habbit", "siho_toon_", "skluzy_zetech", "jjan_bubu", "hibi_heebee",
     "kim.chiik", "gguldon_", "daily.fishbowl", "bbaekong_toon", "donizoa_",
     "countryside.mouse", "go.ownos", "bbyonggeul",
@@ -90,7 +103,8 @@ DEFAULT_IG_ACCOUNTS = [
     "studio_hongcha", "luck.iwi", "mel.d_illust", "kidari.192", "parkyeny", "h.tw92",
     "hey.donnana", "yuriha_94", "kennenblog", "coco._records", "mukbbo_date",
     "_dukong_", "berryoungst", "muk_zzangbin", "jejumisscha",
-]
+    *(account for group in REELS_ACCOUNT_GROUPS.values() for account in group),
+]))
 
 # ---------------------------------------------------------------- X (트위터)
 X_ACCOUNTS_FILE = os.path.join(BASE_DIR, "x_accounts.json")
